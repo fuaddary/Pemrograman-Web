@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minggu 3 — Layout Web Front-End dengan CSS</title>
+  <meta name="description"
+    content="Modul Kuliah Interaktif Minggu 3: Layout Web Front-End dengan CSS — Box Model, Positioning, Stacking Context, Flexbox, CSS Grid, Container Queries, Centering, dan Fluid Units.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0E2438;
+      --panel: #123253;
+      --panel-2: #1B3E60;
+      --surface: #1B3E60;
+      --line: #3C6E8F;
+      --line-soft: rgba(74, 144, 184, 0.22);
+      --text: #EAF2F6;
+      --muted: #8FB2C8;
+      --amber: #F2A93B;
+      --coral: #E8654A;
+      --mint: #5FC7A3;
+      --on-text: #0E2438;
+      --radius: 10px;
+    }
+
+    html.light-theme {
+      --bg: #F6F8FA;
+      --panel: #EAF0F5;
+      --panel-2: #DCE6EE;
+      --surface: #FFFFFF;
+      --line: #B7C9D6;
+      --line-soft: rgba(60, 110, 143, 0.18);
+      --text: #132A3E;
+      --muted: #5D7A91;
+      --amber: #B8690A;
+      --coral: #B23A26;
+      --mint: #1F7A5C;
+      --on-text: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      overflow: hidden;
+      transition: background .2s ease, color .2s ease;
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      opacity: .6;
+      z-index: 0;
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 36px;
+      border-bottom: 1px solid var(--line-soft);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .topbar .crumb b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--panel-2);
+    }
+
+    .slides {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 40px 60px 30px;
+      display: none;
+      flex-direction: column;
+      justify-content: safe center;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    h1.headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      margin: 0 0 14px;
+      max-width: 16ch;
+      color: var(--text);
+    }
+
+    h2.sub {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: clamp(19px, 2.2vw, 26px);
+      margin: 0 0 16px;
+      color: var(--text);
+    }
+
+    p.lede {
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--muted);
+      max-width: 68ch;
+      margin: 0 0 14px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 16px;
+      width: fit-content;
+      background: color-mix(in srgb, var(--amber) 12%, transparent);
+      color: var(--amber);
+      border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
+    }
+
+    .tag-mint {
+      background: color-mix(in srgb, var(--mint) 12%, transparent);
+      color: var(--mint);
+      border-color: color-mix(in srgb, var(--mint) 40%, transparent);
+    }
+
+    .tag-coral {
+      background: color-mix(in srgb, var(--coral) 10%, transparent);
+      color: var(--coral);
+      border-color: color-mix(in srgb, var(--coral) 35%, transparent);
+    }
+
+    .tag-muted {
+      background: transparent;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 36px;
+      border-top: 1px solid var(--line-soft);
+      flex-shrink: 0;
+    }
+
+    .navbtn {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .navbtn:hover {
+      background: var(--panel-2);
+    }
+
+    .navbtn:disabled {
+      opacity: .35;
+      cursor: default;
+    }
+
+    .navbtn.locked {
+      opacity: .7;
+    }
+
+    .navbtn.shake {
+      animation: shake .35s ease;
+    }
+
+    @keyframes shake {
+
+      10%,
+      90% {
+        transform: translateX(-1px);
+      }
+
+      20%,
+      80% {
+        transform: translateX(2px);
+      }
+
+      30%,
+      50%,
+      70% {
+        transform: translateX(-4px);
+      }
+
+      40%,
+      60% {
+        transform: translateX(4px);
+      }
+    }
+
+    .navbtn:focus-visible,
+    button:focus-visible,
+    .choice:focus-visible,
+    .qc-option:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      max-width: 44vw;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--line);
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: all .2s ease;
+    }
+
+    .dot.on {
+      background: var(--amber);
+      width: 16px;
+      border-radius: 4px;
+    }
+
+    .dot.passed-dot {
+      background: var(--mint);
+    }
+
+    .mobile-nav-label {
+      display: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .row {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+    }
+
+    code,
+    .mono-code,
+    p code,
+    li code,
+    span.mono:not(.range-val) {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.88em;
+      background: color-mix(in srgb, var(--amber) 15%, var(--panel));
+      color: var(--amber);
+      border: 1px solid color-mix(in srgb, var(--amber) 34%, transparent);
+      padding: 1.5px 6.5px;
+      border-radius: 5px;
+      font-weight: 500;
+      letter-spacing: -0.2px;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1.3;
+      margin: 0 1.5px;
+    }
+
+    pre code,
+    pre.snippet code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+      font-weight: normal;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .two-col-gap {
+      display: flex;
+      gap: 44px;
+      flex-wrap: wrap;
+    }
+
+    .cpmk {
+      margin-top: 24px;
+      display: flex;
+      gap: 26px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .cpmk b {
+      color: var(--mint);
+      display: block;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .credit-line {
+      margin-top: 26px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .credit-line b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .agenda-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-width: 58ch;
+    }
+
+    .agenda-list li {
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .agenda-list .num {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--amber);
+      font-size: 14px;
+      width: 22px;
+    }
+
+    .agenda-list .txt {
+      font-size: 15px;
+    }
+
+    .agenda-list .txt small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .intro-layout {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .intro-text {
+      flex: 1.35;
+      min-width: 300px;
+    }
+
+    .intro-visual {
+      flex: 1;
+      min-width: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-visual svg {
+      width: 100%;
+      max-width: 230px;
+      height: auto;
+    }
+
+    .key-points {
+      list-style: none;
+      margin: 14px 0 0;
+      padding: 0;
+      max-width: 66ch;
+    }
+
+    .key-points li {
+      position: relative;
+      padding: 4px 0 4px 18px;
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .key-points li:before {
+      content: "–";
+      position: absolute;
+      left: 0;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .ic-amber {
+      stroke: var(--amber);
+      fill: none;
+    }
+
+    .ic-coral {
+      stroke: var(--coral);
+      fill: none;
+    }
+
+    .ic-mint {
+      stroke: var(--mint);
+      fill: none;
+    }
+
+    .ic-line {
+      stroke: var(--line);
+      fill: none;
+    }
+
+    .ic-fill-amber {
+      fill: var(--amber);
+    }
+
+    .ic-fill-coral {
+      fill: var(--coral);
+    }
+
+    .ic-fill-mint {
+      fill: var(--mint);
+    }
+
+    .ic-fill-soft {
+      fill: var(--surface);
+      stroke: var(--line);
+    }
+
+    .ic-text {
+      fill: var(--text);
+      stroke: var(--text);
+    }
+
+    .ic-muted {
+      fill: var(--muted);
+      stroke: none;
+    }
+
+    .ic-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+
+    .control-group label {
+      display: block;
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .choice {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 12px;
+      padding: 6px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Mono';
+    }
+
+    .choice.on {
+      background: var(--amber);
+      color: var(--on-text);
+      border-color: var(--amber);
+      font-weight: 500;
+    }
+
+    input[type=range] {
+      accent-color: var(--amber);
+      width: 100%;
+    }
+
+    .range-val {
+      font-size: 12px;
+    }
+
+    .example-layout {
+      display: grid;
+      grid-template-columns: 210px 1fr 1fr;
+      gap: 22px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .example-col-label {
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .ex-controls {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-panel {
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'IBM Plex Mono';
+      font-size: 12.5px;
+      line-height: 1.75;
+      overflow: auto;
+      height: calc(100% - 24px);
+    }
+
+    .cs-block {
+      margin-bottom: 10px;
+    }
+
+    .cs-sel {
+      color: #EAF2F6;
+    }
+
+    .cs-line {
+      padding-left: 16px;
+    }
+
+    .cs-line.cs-hl {
+      background: rgba(242, 169, 59, 0.18);
+      border-radius: 4px;
+      margin: 0 -6px;
+      padding: 2px 6px 2px 22px;
+    }
+
+    .cs-prop {
+      color: #7FD9BB;
+    }
+
+    .cs-val {
+      color: #F2B25E;
+    }
+
+    .ex-result {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      height: calc(100% - 24px);
+    }
+
+    @media (max-width:900px) {
+      .example-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .code-panel,
+      .ex-result {
+        height: auto;
+      }
+    }
+
+    .bm-stage {
+      position: relative;
+      width: 230px;
+      height: 190px;
+      background: color-mix(in srgb, var(--text) 4%, var(--bg));
+      border: 1px dashed var(--line-soft);
+    }
+
+    .bm-margin {
+      position: absolute;
+      inset: 12px;
+      border: 2px dashed transparent;
+    }
+
+    .bm-border {
+      position: absolute;
+      inset: 12px;
+      border: 9px solid transparent;
+    }
+
+    .bm-padding {
+      position: absolute;
+      inset: 21px;
+      border: 14px solid transparent;
+    }
+
+    .bm-content {
+      position: absolute;
+      inset: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      border-radius: 2px;
+      color: var(--text);
+    }
+
+    .bm-margin.on {
+      border-color: var(--amber);
+    }
+
+    .bm-border.on {
+      border-color: var(--coral);
+    }
+
+    .bm-padding.on {
+      border-color: var(--mint);
+    }
+
+    .bm-content.on {
+      background: color-mix(in srgb, var(--text) 10%, transparent);
+    }
+
+    .pos-frame {
+      position: relative;
+      width: 100%;
+      max-width: 280px;
+      height: 190px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      transform: translateZ(0);
+      background: var(--surface);
+    }
+
+    .pos-scroll-note {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-family: 'IBM Plex Mono';
+      font-size: 10px;
+      color: var(--muted);
+      z-index: 5;
+    }
+
+    .pos-scroll {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      padding-top: 26px;
+    }
+
+    .pos-tall {
+      height: 420px;
+      padding: 10px;
+    }
+
+    .pos-box {
+      width: 60px;
+      height: 60px;
+      background: var(--amber);
+      color: var(--on-text);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .zstage {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      background: var(--panel-2);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .zbox {
+      position: absolute;
+      width: 96px;
+      height: 66px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--text);
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .zbox.z-a {
+      background: color-mix(in srgb, var(--amber) 28%, var(--surface));
+      border-color: var(--amber);
+    }
+
+    .zbox.z-b {
+      background: color-mix(in srgb, var(--coral) 28%, var(--surface));
+      border-color: var(--coral);
+    }
+
+    .zbox.z-c {
+      background: color-mix(in srgb, var(--mint) 28%, var(--surface));
+      border-color: var(--mint);
+    }
+
+    .flex-stage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    .flex-item {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      min-width: 44px;
+      min-height: 44px;
+      color: var(--text);
+    }
+
+    .mini-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--panel-2);
+      padding: 10px 14px;
+      border-radius: 6px;
+    }
+
+    .mini-navbar .logo {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .mini-navbar .links {
+      display: flex;
+      gap: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mini-cards {
+      display: flex;
+      gap: 10px;
+    }
+
+    .mini-cards .c {
+      flex: 1;
+      background: var(--panel-2);
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .pattern-card {
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--panel);
+    }
+
+    .pattern-title {
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      color: var(--mint);
+      margin-bottom: 10px;
+    }
+
+    .grid-stage {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      gap: 10px;
+    }
+
+    .grid-cell {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .autoFitWrap {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      transition: width .2s ease;
+    }
+
+    .areas-demo {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      grid-template-rows: 42px 1fr 34px;
+      grid-template-areas: "head head" "side main" "foot foot";
+      gap: 8px;
+      height: 190px;
+      width: 100%;
+      transition: all .2s ease;
+    }
+
+    .areas-demo.stacked {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto auto;
+      grid-template-areas: "head" "side" "main" "foot";
+      height: auto;
+    }
+
+    .a-head {
+      grid-area: head;
+    }
+
+    .a-side {
+      grid-area: side;
+    }
+
+    .a-main {
+      grid-area: main;
+    }
+
+    .a-foot {
+      grid-area: foot;
+    }
+
+    .areas-demo>div {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--muted);
+      min-height: 38px;
+      padding: 6px 12px;
+    }
+
+    .resp-frame-outer {
+      container-type: inline-size;
+      background: transparent;
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      transition: width .2s ease;
+    }
+
+    .resp-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    @container (min-width:320px) {
+      .resp-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .resp-grid .r-cell {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .center-demo {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .center-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--amber);
+    }
+
+    .cd-flex {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cd-grid {
+      display: grid;
+      place-items: center;
+    }
+
+    .cd-abs .center-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .qc-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 600px;
+    }
+
+    .qc-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans';
+      font-size: 15px;
+      transition: background .15s ease, border-color .15s ease;
+    }
+
+    .qc-option:hover {
+      background: var(--panel-2);
+    }
+
+    .qc-option.correct {
+      background: color-mix(in srgb, var(--mint) 15%, transparent);
+      border-color: var(--mint);
+    }
+
+    .qc-option.wrong {
+      background: color-mix(in srgb, var(--coral) 15%, transparent);
+      border-color: var(--coral);
+    }
+
+    .qc-option.locked {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .qc-feedback {
+      margin-top: 16px;
+      font-size: 14px;
+      min-height: 20px;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .qc-feedback.good {
+      color: var(--mint);
+    }
+
+    .qc-feedback.bad {
+      color: var(--coral);
+    }
+
+    /* Mobile Phone Frame Mockup for Challenge */
+    .phone-mockup-wrapper {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .phone-frame {
+      width: 280px;
+      height: 410px;
+      background: var(--bg);
+      border: 3px solid var(--line);
+      border-radius: 26px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+      transform: translateZ(0);
+    }
+
+    .phone-status-bar {
+      height: 22px;
+      background: var(--panel-2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      color: var(--text);
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .phone-notch {
+      width: 36px;
+      height: 4px;
+      background: var(--line);
+      border-radius: 3px;
+    }
+
+    .phone-app-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      scrollbar-width: thin;
+    }
+
+    .phone-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: color-mix(in srgb, var(--panel) 92%, var(--bg));
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .phone-search-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 4px 10px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .phone-profile-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: var(--on-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: none;
+      cursor: pointer;
+    }
+
+    .phone-banner {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--coral) 40%, var(--panel)), color-mix(in srgb, var(--amber) 30%, var(--panel)));
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin: 8px 10px 6px;
+      color: #FFFFFF;
+    }
+
+    .phone-banner .pb-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .phone-banner .pb-sub {
+      font-size: 8.5px;
+      opacity: 0.9;
+    }
+
+    .phone-wallet {
+      display: flex;
+      justify-content: space-between;
+      background: var(--panel-2);
+      border-radius: 6px;
+      margin: 0 10px 8px;
+      padding: 5px 8px;
+      font-size: 9px;
+      border: 1px solid var(--line-soft);
+    }
+
+    .phone-wallet-item {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .phone-wallet-item b {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .phone-menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 0 10px 8px;
+    }
+
+    .phone-menu-item {
+      background: var(--surface);
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 2px;
+      text-align: center;
+      gap: 3px;
+    }
+
+    .phone-menu-item svg {
+      width: 13px;
+      height: 13px;
+      color: var(--amber);
+    }
+
+    .phone-menu-item span {
+      font-size: 8px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 52px;
+    }
+
+    .phone-section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 10px 4px;
+      font-size: 9.5px;
+      font-weight: 600;
+    }
+
+    .phone-flash-tag {
+      background: var(--coral);
+      color: #FFFFFF;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 8px;
+    }
+
+    .phone-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      padding: 0 10px 10px;
+    }
+
+    .phone-card {
+      background: var(--surface);
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-card-img {
+      height: 44px;
+      background: var(--panel-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .phone-card-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: var(--amber);
+      color: var(--on-text);
+      font-size: 7px;
+      font-weight: 700;
+      padding: 1px 3px;
+      border-radius: 2px;
+    }
+
+    .phone-card-body {
+      padding: 4px 6px;
+    }
+
+    .phone-card-title {
+      font-size: clamp(8px, 2.3cqi, 9px);
+      color: var(--text);
+      line-height: 1.2;
+      font-weight: 500;
+      margin-bottom: 2px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .phone-card-price {
+      font-size: 9px;
+      color: var(--coral);
+      font-weight: 700;
+    }
+
+    .phone-bottom-nav {
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      background: var(--panel);
+      border-top: 1px solid var(--line-soft);
+      display: flex;
+      justify-content: space-around;
+      padding: 5px 4px 6px;
+      flex-shrink: 0;
+    }
+
+    .phone-nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 7.5px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .phone-nav-btn.active {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .phone-nav-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Step by Step Guide Card */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .step-card {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .step-num {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--amber);
+      background: color-mix(in srgb, var(--amber) 15%, transparent);
+      border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+      padding: 1.5px 7px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+
+    .step-card h3 {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .step-card p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .checklist {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .checklist li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 6px 0;
+      font-size: 14px;
+    }
+
+    .checklist li:before {
+      content: "-";
+      color: var(--amber);
+      font-family: 'IBM Plex Mono';
+      font-weight: 600;
+    }
+
+    pre.snippet {
+      margin: 10px 0 0;
+      white-space: pre-wrap;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--panel-2);
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+
+    @media (max-width:760px) {
+      .slide {
+        padding: 24px 18px 18px;
+        justify-content: flex-start;
+      }
+
+      .topbar,
+      .navbar {
+        padding: 12px 16px;
+      }
+
+      .topbar .crumb {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 48vw;
+      }
+
+      .row,
+      .two-col-gap {
+        gap: 16px;
+      }
+
+      .dots {
+        display: none;
+      }
+
+      .mobile-nav-label {
+        display: block;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="ic-text" />
+      </marker>
+      <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-opacity="0.18" />
+      </filter>
+    </defs>
+  </svg>
+  <div class="grid-bg"></div>
+  <div class="deck">
+    <div class="topbar">
+      <div class="crumb">Pemrograman Web · ET234305 — <b>Minggu 3: Layout dengan CSS</b></div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="fsToggle" title="Mode Layar Penuh (F)"><svg width="13" height="13"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+          </svg><span>Layar Penuh</span></button>
+        <button class="theme-toggle" id="themeToggle"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg><span>Light</span></button>
+        <div class="counter"><span id="curNum">1</span> / <span id="totNum">1</span></div>
+      </div>
+    </div>
+    <div class="slides" id="slides"></div>
+    <div class="navbar">
+      <button class="navbtn" id="prevBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          style="margin-right:6px; vertical-align:-1px;">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>Sebelumnya</button>
+      <div class="dots" id="dots"></div>
+      <div class="mobile-nav-label" id="mobileProgress">Slide 1 / 42</div>
+      <button class="navbtn" id="nextBtn">Berikutnya<svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          style="margin-left:6px; vertical-align:-1px;">
+          <polyline points="9 18 15 12 9 6" />
+        </svg></button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+
+      function cssLine(prop, val, hl) {
+        return '<div class="cs-line' + (hl ? ' cs-hl' : '') + '"><span class="cs-prop">' + prop + '</span>: <span class="cs-val">' + val + '</span>;</div>';
+      }
+      function cssBlock(selector, lines) {
+        return '<div class="cs-block"><div class="cs-sel">' + selector + ' {</div>' + lines.join('') + '<div class="cs-sel">}</div></div>';
+      }
+      function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+        }
+        return a;
+      }
+
+      const titleHTML = '\
+  <section class="slide">\
+    <div class="tag">Sesi Penyampaian · Modul 1</div>\
+    <h1 class="headline">Layout Web Front-End dengan CSS</h1>\
+    <p class="lede">Dari kotak tunggal ke tata letak halaman penuh: positioning, Flexbox, dan Grid — tiga alat yang akan kalian pakai di hampir setiap proyek front-end.</p>\
+    <div class="cpmk">\
+      <div><b>Sub-CPMK</b>Mahasiswa mampu membuat layout web front-end dengan CSS</div>\
+      <div><b>Terkait CPMK</b>CPMK-1 (10%)</div>\
+      <div><b>Prasyarat</b>Box Model &amp; Selector (pre-reading Minggu 2)</div>\
+    </div>\
+    <div class="credit-line">Instructor: <b>Fuad Dary Rosyadi</b> &nbsp;·&nbsp; Compiled by Anthropic Claude</div>\
+  </section>';
+
+      const agendaHTML = '\
+  <section class="slide">\
+    <h2 class="sub">Peta sesi hari ini · 120 menit</h2>\
+    <ol class="agenda-list">\
+      <li><span class="num">01</span><span class="txt">Box Model &amp; Positioning<small>Termasuk stacking context — 15 menit</small></span></li>\
+      <li><span class="num">02</span><span class="txt">Flexbox: dasar → lanjutan<small>flex-wrap, flex-grow, order — 25 menit</small></span></li>\
+      <li><span class="num">03</span><span class="txt">CSS Grid: dasar → lanjutan<small>auto-fit/minmax, spanning, template areas — 30 menit</small></span></li>\
+      <li><span class="num">04</span><span class="txt">Responsive &amp; Fluid Units<small>Container Queries, clamp(), Centering — 25 menit</small></span></li>\
+      <li><span class="num">05</span><span class="txt">Pengayaan mandiri: Subgrid<small>Di luar penilaian inti — 5 menit</small></span></li>\
+      <li><span class="num">06</span><span class="txt">Code Challenge &amp; Penutup<small>Persiapan Praktikum — 20 menit</small></span></li>\
+    </ol>\
+    <p class="footer-note">Tiap sub-materi: penjelasan → contoh interaktif (kontrol / kode / hasil) → cek pemahaman. Jawaban keliru tidak langsung diberi tahu yang benar — kalian akan dikembalikan ke materinya dulu untuk dipelajari ulang.</p>\
+  </section>';
+
+      const flexPatternsHTML = '\
+  <section class="slide">\
+    <h2 class="sub">Pola layout dengan Flexbox</h2>\
+    <p class="lede">Dua pola yang akan langsung kalian pakai di praktikum.</p>\
+    <div class="two-col-gap">\
+      <div class="pattern-card" style="flex:1; min-width:280px;">\
+        <div class="pattern-title">Navbar — <code class="mono">justify-content: space-between</code></div>\
+        <div class="mini-navbar"><div class="logo">Logo</div><div class="links"><span>Beranda</span><span>Tentang</span><span>Kontak</span></div></div>\
+      </div>\
+      <div class="pattern-card" style="flex:1; min-width:280px;">\
+        <div class="pattern-title">Baris kartu — <code class="mono">display: flex; gap</code></div>\
+        <div class="mini-cards"><div class="c">Kartu 1</div><div class="c">Kartu 2</div><div class="c">Kartu 3</div></div>\
+      </div>\
+    </div>\
+  </section>';
+
+      const subgridHTML = '\
+  <section class="slide">\
+    <div class="tag tag-muted">Pengayaan mandiri — di luar penilaian inti</div>\
+    <h2 class="sub">Sekilas: CSS Subgrid</h2>\
+    <p class="lede">Subgrid memungkinkan sebuah grid item mewarisi garis kolom/baris dari grid induknya — berguna saat beberapa kartu perlu sejajar meski isinya beda panjang. Dukungan browser sudah luas, tapi ini bahan eksplorasi mandiri, bukan materi wajib praktikum.</p>\
+    <div class="panel"><pre class="snippet" style="margin:0;">.kartu-induk { display: grid; grid-template-columns: repeat(3, 1fr); }\n.kartu-item { display: grid; grid-template-rows: subgrid; grid-row: span 3; }</pre></div>\
+  </section>';
+
+      const challengeHTML = '\
+  <section class="slide">\
+    <div class="tag tag-coral">Code Challenge — dikerjakan di Akhir Sesi Pembelajaran</div>\
+    <h2 class="sub">Studi Kasus: Layout Mobile E-Commerce</h2>\
+    <div class="row" style="align-items:center;">\
+      <div class="col" style="flex:0.9; min-width:280px;">\
+        <div class="phone-mockup-wrapper">\
+          <div class="phone-frame">\
+            <div class="phone-status-bar">\
+              <span>09:41</span>\
+              <div class="phone-notch"></div>\
+              <div style="display:flex; align-items:center; gap:4px;">\
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>\
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="10" x2="23" y2="14"/></svg>\
+              </div>\
+            </div>\
+            <div class="phone-app-body">\
+              <div class="phone-topbar">\
+                <div class="phone-search-box">\
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>\
+                  <span>Cari produk di E-Commerce...</span>\
+                </div>\
+                <button type="button" class="phone-profile-btn" title="Profil">\
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\
+                </button>\
+              </div>\
+              <div class="phone-banner">\
+                <div class="pb-title">Festival Brand 17.8</div>\
+                <div class="pb-sub">Diskon s/d 50% + Gratis Ongkir Se-Indonesia</div>\
+              </div>\
+              <div class="phone-wallet">\
+                <div class="phone-wallet-item"><span>Saldo</span> <b>Rp194.632</b></div>\
+                <div class="phone-wallet-item"><span>Koin</span> <b>262</b></div>\
+                <div class="phone-wallet-item" style="color:var(--mint);"><span>Transfer</span> <b>Gratis</b></div>\
+              </div>\
+              <div class="phone-menu-grid">\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Gratis Ongkir</span></div>\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>Pulsa &amp; Tagihan</span></div>\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Mall</span></div>\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 12h4"/></svg><span>Pay</span></div>\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg><span>Food</span></div>\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg><span>Pilih Lokal</span></div>\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg><span>SPayLater</span></div>\
+                <div class="phone-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Lihat Semua</span></div>\
+              </div>\
+              <div class="phone-section-head">\
+                <div style="display:flex; align-items:center; gap:5px;"><span style="color:var(--coral); font-weight:700;">FLASH SALE</span><span class="phone-flash-tag">03:42:57</span></div>\
+                <span style="color:var(--muted); font-size:8.5px;">Lihat Semua &gt;</span>\
+              </div>\
+              <div class="phone-cards-grid">\
+                <div class="phone-card">\
+                  <div class="phone-card-img"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--line)" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="phone-card-badge">93% OFF</div></div>\
+                  <div class="phone-card-body"><div class="phone-card-title">Eyeliner Waterproof Precision Black</div><div class="phone-card-price">Rp12.500</div></div>\
+                </div>\
+                <div class="phone-card">\
+                  <div class="phone-card-img"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--line)" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="phone-card-badge">16% OFF</div></div>\
+                  <div class="phone-card-body"><div class="phone-card-title">Facial Cleanser Gentle Skin 100ml</div><div class="phone-card-price">Rp84.000</div></div>\
+                </div>\
+              </div>\
+            </div>\
+            <div class="phone-bottom-nav">\
+              <button type="button" class="phone-nav-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Rekomendasi</span></button>\
+              <button type="button" class="phone-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span>Live</span></button>\
+              <button type="button" class="phone-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Video</span></button>\
+              <button type="button" class="phone-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Notifikasi</span></button>\
+              <button type="button" class="phone-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Saya</span></button>\
+            </div>\
+          </div>\
+        </div>\
+      </div>\
+      <div class="col" style="flex:1.2;">\
+        <p class="lede" style="margin-top:0;">Bangun antarmuka halaman beranda mobile e-commerce yang responsif dan siap digunakan pada berbagai ukuran layar Android.</p>\
+        <ul class="checklist">\
+          <li><b>Sticky Header (Flexbox):</b> Search bar fleksibel (<code class="mono">flex: 1</code>) berdampingan dengan tombol profil di pojok kanan atas, menempel saat di-scroll (<code class="mono">position: sticky; top: 0</code>).</li>\
+          <li><b>Menu Kategori 2D (CSS Grid):</b> Susunan 8 ikon menu tertata simetris 4 kolom memakai <code class="mono">grid-template-columns: repeat(4, 1fr)</code> dan <code class="mono">gap</code>.</li>\
+          <li><b>Katalog Produk Card List:</b> Grid 2 kolom yang responsif memakai <code class="mono">repeat(2, 1fr)</code> atau <code class="mono">auto-fit</code> dengan jarak antar kartu murni memakai <code class="mono">gap</code> (tanpa margin manual).</li>\
+          <li><b>Fluid Typography:</b> Judul kartu produk memakai <code class="mono">clamp()</code> agar tidak pecah/terpotong di layar HP sempit.</li>\
+          <li><b>Fixed Bottom Navigation Bar:</b> Menu bawah (5 tab) tetap berada di dasar layar (<code class="mono">position: sticky; bottom: 0; z-index: ...</code>) dengan distribusi ruang seimbang memakai <code class="mono">justify-content: space-around</code>.</li>\
+        </ul>\
+        <div class="footer-note" style="margin-top:12px;">*Lihat slide berikutnya untuk panduan langkah demi langkah (blueprint teknis).</div>\
+      </div>\
+    </div>\
+  </section>';
+
+      const challengeGuideHTML = '\
+  <section class="slide">\
+    <div class="tag tag-mint">Blueprint Pengerjaan Praktikum</div>\
+    <h2 class="sub">Panduan Langkah Demi Langkah (Step-by-Step Guide)</h2>\
+    <p class="lede">Gunakan pendekatan bertahap ini saat membangun layout mobile e-commerce agar kode CSS kalian rapi, terstruktur, dan mudah di-debug:</p>\
+    <div class="steps-grid">\
+      <div class="step-card">\
+        <span class="step-num">Langkah 1</span>\
+        <h3>Frame Mobile &amp; Global Setup</h3>\
+        <p>Bungkus tampilan dalam container mobile (<code class="mono">max-width: 420px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; position: relative;</code>). Pasang reset global <code class="mono">box-sizing: border-box</code> agar padding tidak merusak ukuran elemen.</p>\
+      </div>\
+      <div class="step-card">\
+        <span class="step-num">Langkah 2</span>\
+        <h3>Sticky Topbar dengan Flexbox</h3>\
+        <p>Beri header <code class="mono">position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 8px;</code>. Berikan kotak input search <code class="mono">flex: 1</code> agar otomatis mengisi ruang kosong, dan tombol profil dengan ukuran tetap di sisi kanan.</p>\
+      </div>\
+      <div class="step-card">\
+        <span class="step-num">Langkah 3</span>\
+        <h3>Menu Kategori dengan CSS Grid</h3>\
+        <p>Gunakan CSS Grid 2 dimensi untuk 8 ikon kategori: <code class="mono">display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;</code>. Buat tiap item menu rapi terpusat dengan <code class="mono">display: flex; flex-direction: column; align-items: center;</code>.</p>\
+      </div>\
+      <div class="step-card">\
+        <span class="step-num">Langkah 4</span>\
+        <h3>Katalog Produk (Card List) &amp; clamp()</h3>\
+        <p>Tata kartu produk dengan <code class="mono">display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;</code>. Gunakan <code class="mono">gap</code> untuk jarak antar kartu, dan gunakan <code class="mono">font-size: clamp(11px, 2.5vw, 13px);</code> untuk judul kartu agar dinamis.</p>\
+      </div>\
+      <div class="step-card">\
+        <span class="step-num">Langkah 5</span>\
+        <h3>Fixed Bottom Nav &amp; Stacking Context</h3>\
+        <p>Kunci navbar bawah di dasar layar dengan <code class="mono">position: sticky; bottom: 0; z-index: 40;</code>. Sebarkan 5 tab menu secara proporsional memakai <code class="mono">display: flex; justify-content: space-around; align-items: center;</code>.</p>\
+      </div>\
+    </div>\
+  </section>';
+
+      const closingHTML = '\
+  <section class="slide">\
+    <h2 class="sub">Deklarasi AI &amp; langkah berikutnya</h2>\
+    <div class="row">\
+      <div class="col panel"><p style="margin-top:0;">Sebaiknya tidak menggunakan AI (ChatGPT, Copilot, dll) untuk mengerjakan code challenge. </p></div>\
+      <div class="col panel"><p style="margin-top:0;">Hal ini bertujuan untuk mengasah kemampuan pemecahan masalah dan logika pemrograman.</p></div>\
+    </div>\
+  </section>';
+
+      // ---------- richer icons: shapes + labels + soft shadow ----------
+      const T = '<text class="ic-muted ic-label" text-anchor="middle"';
+      const icons = {
+        boxmodel: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-amber" x="10" y="10" width="150" height="120" rx="6" stroke-width="2" filter="url(#softShadow)"/>'
+          + '<rect class="ic-coral" x="30" y="28" width="110" height="84" rx="5" stroke-width="2"/>'
+          + '<rect class="ic-mint" x="50" y="46" width="70" height="48" rx="4" stroke-width="2"/>'
+          + '<rect class="ic-fill-soft" x="66" y="60" width="38" height="20" rx="2"/>'
+          + '<line class="ic-muted" x1="72" y1="66" x2="98" y2="66" stroke="currentColor" stroke-width="1.5"/>'
+          + '<line class="ic-muted" x1="72" y1="72" x2="90" y2="72" stroke="currentColor" stroke-width="1.5"/>'
+          + T + ' x="85" y="24">margin</text>' + T + ' x="85" y="130">border</text>' + T + ' x="85" y="42">padding</text>'
+          + '</svg>',
+        positioning: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-line" x="16" y="16" width="36" height="26" rx="4" stroke-width="1.5" stroke-dasharray="3 3"/>'
+          + '<rect class="ic-line" x="16" y="52" width="36" height="26" rx="4" stroke-width="1.5" stroke-dasharray="3 3"/>'
+          + '<rect class="ic-line" x="16" y="88" width="36" height="26" rx="4" stroke-width="1.5" stroke-dasharray="3 3"/>'
+          + '<rect class="ic-fill-amber" x="96" y="18" width="58" height="40" rx="6" filter="url(#softShadow)"/>'
+          + T + ' x="125" y="42" fill="var(--on-text)">box</text>'
+          + '<path class="ic-text" d="M52 65 C 75 65, 75 40, 96 38" stroke-width="2" fill="none" marker-end="url(#arrow)"/>'
+          + T + ' x="80" y="100">normal flow → offset</text>'
+          + '</svg>',
+        stacking: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-fill-amber" x="18" y="66" width="80" height="56" rx="8" opacity="0.9" filter="url(#softShadow)"/>'
+          + '<rect class="ic-fill-coral" x="50" y="42" width="80" height="56" rx="8" opacity="0.9" filter="url(#softShadow)"/>'
+          + '<rect class="ic-fill-mint" x="82" y="18" width="80" height="56" rx="8" opacity="0.9" filter="url(#softShadow)"/>'
+          + T + ' x="58" y="100" fill="var(--on-text)">z:1</text>' + T + ' x="90" y="76" fill="var(--on-text)">z:2</text>' + T + ' x="122" y="52" fill="var(--on-text)">z:3</text>'
+          + '</svg>',
+        flexbasic: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-fill-soft" x="18" y="48" width="30" height="42" rx="4" stroke-width="1.5" filter="url(#softShadow)"/>'
+          + '<rect class="ic-fill-soft" x="60" y="30" width="30" height="60" rx="4" stroke-width="1.5" filter="url(#softShadow)"/>'
+          + '<rect class="ic-fill-soft" x="102" y="52" width="30" height="38" rx="4" stroke-width="1.5" filter="url(#softShadow)"/>'
+          + '<path class="ic-amber" d="M14 128 H150" stroke-width="2" marker-end="url(#arrow)"/>'
+          + T + ' x="82" y="142" fill="var(--amber)">main axis</text>'
+          + '<path class="ic-mint" d="M14 128 V14" stroke-width="2" marker-end="url(#arrow)"/>'
+          + T + ' x="14" y="10" fill="var(--mint)" transform="rotate(0 14 10)">cross</text>'
+          + '</svg>',
+        flexadv: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-fill-soft" x="14" y="16" width="30" height="30" rx="4" stroke-width="1.5"/>'
+          + '<rect class="ic-fill-amber" x="50" y="16" width="66" height="30" rx="4" opacity="0.3" stroke-width="1.5"/>'
+          + T + ' x="83" y="35" fill="var(--amber)">grow</text>'
+          + '<rect class="ic-fill-soft" x="122" y="16" width="30" height="30" rx="4" stroke-width="1.5"/>'
+          + '<path class="ic-coral" d="M138 50 C 150 62, 140 74, 120 78" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>'
+          + '<rect class="ic-line" x="14" y="96" width="30" height="30" rx="4" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>'
+          + T + ' x="29" y="140">wrapped row</text>'
+          + '</svg>',
+        gridbasic: '<svg viewBox="0 0 170 150">'
+          + [0, 1, 2].map(function (c) { return [0, 1].map(function (r) { return '<rect class="ic-fill-soft" x="' + (14 + c * 50) + '" y="' + (16 + r * 62) + '" width="42" height="54" rx="4" stroke-width="1.5"/>'; }).join(''); }).join('')
+          + T + ' x="35" y="12">col 1</text>' + T + ' x="85" y="12">col 2</text>' + T + ' x="135" y="12">col 3</text>'
+          + '</svg>',
+        gridadv: '<svg viewBox="0 0 170 150">'
+          + [0, 1, 2, 3].map(function (c) { return '<rect class="ic-fill-soft" x="' + (10 + c * 38) + '" y="18" width="30" height="46" rx="4" stroke-width="1.5"/>'; }).join('')
+          + T + ' x="85" y="82">wide → 4 cols</text>'
+          + [0, 1].map(function (c) { return '<rect class="ic-fill-soft" x="' + (38 + c * 58) + '" y="96" width="50" height="40" rx="4" stroke-width="1.5"/>'; }).join('')
+          + T + ' x="85" y="146">narrow → 2 cols</text>'
+          + '<path class="ic-amber" d="M85 68 V92" stroke-width="1.8" marker-end="url(#arrow)"/>'
+          + '</svg>',
+        gridspan: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-fill-soft" x="10" y="10" width="70" height="54" rx="4" stroke-width="1.5"/>'
+          + '<rect class="ic-fill-amber" x="90" y="10" width="70" height="54" rx="4" opacity="0.32" stroke-width="1.5"/>'
+          + T + ' x="125" y="42" fill="var(--amber)">span 2</text>'
+          + '<rect class="ic-fill-soft" x="10" y="74" width="70" height="54" rx="4" stroke-width="1.5"/>'
+          + '<rect class="ic-fill-soft" x="90" y="74" width="70" height="54" rx="4" stroke-width="1.5"/>'
+          + '</svg>',
+        gridareas: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-fill-amber" x="10" y="10" width="150" height="28" rx="4" opacity="0.3" stroke-width="1.5"/>' + T + ' x="85" y="28">header</text>'
+          + '<rect class="ic-fill-coral" x="10" y="46" width="38" height="64" rx="4" opacity="0.3" stroke-width="1.5"/>' + T + ' x="29" y="80" style="font-size:8px;">sidebar</text>'
+          + '<rect class="ic-fill-soft" x="56" y="46" width="104" height="64" rx="4" stroke-width="1.5"/>' + T + ' x="108" y="80">main</text>'
+          + '<rect class="ic-fill-mint" x="10" y="118" width="150" height="18" rx="3" opacity="0.35" stroke-width="1.5"/>' + T + ' x="85" y="131">footer</text>'
+          + '</svg>',
+        responsive: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-fill-soft" x="10" y="78" width="30" height="54" rx="5" stroke-width="1.5" filter="url(#softShadow)"/>'
+          + '<line class="ic-muted" x1="17" y1="90" x2="33" y2="90" stroke="currentColor" stroke-width="1.2"/><line class="ic-muted" x1="17" y1="96" x2="33" y2="96" stroke="currentColor" stroke-width="1.2"/>'
+          + '<rect class="ic-fill-soft" x="58" y="46" width="52" height="86" rx="6" stroke-width="1.5" filter="url(#softShadow)"/>'
+          + '<line class="ic-muted" x1="68" y1="62" x2="100" y2="62" stroke="currentColor" stroke-width="1.2"/><line class="ic-muted" x1="68" y1="70" x2="90" y2="70" stroke="currentColor" stroke-width="1.2"/>'
+          + '<rect class="ic-fill-soft" x="128" y="16" width="34" height="116" rx="4" stroke-width="1.5" filter="url(#softShadow)"/>'
+          + '<line class="ic-muted" x1="136" y1="32" x2="154" y2="32" stroke="currentColor" stroke-width="1.2"/><line class="ic-muted" x1="136" y1="40" x2="148" y2="40" stroke="currentColor" stroke-width="1.2"/>'
+          + '</svg>',
+        centering: '<svg viewBox="0 0 170 150">'
+          + '<circle class="ic-line" cx="85" cy="75" r="56" stroke-width="1.5" fill="none"/>'
+          + '<circle class="ic-line" cx="85" cy="75" r="34" stroke-width="1.5" fill="none"/>'
+          + '<line class="ic-line" x1="85" y1="8" x2="85" y2="30" stroke-width="1.5"/><line class="ic-line" x1="85" y1="120" x2="85" y2="142" stroke-width="1.5"/>'
+          + '<line class="ic-line" x1="18" y1="75" x2="40" y2="75" stroke-width="1.5"/><line class="ic-line" x1="130" y1="75" x2="152" y2="75" stroke-width="1.5"/>'
+          + '<circle class="ic-fill-amber" cx="85" cy="75" r="11" filter="url(#softShadow)"/>'
+          + '</svg>',
+        fluid: '<svg viewBox="0 0 170 150">'
+          + '<rect class="ic-fill-soft" x="30" y="52" width="110" height="46" rx="6" stroke-width="1.5"/>'
+          + T + ' x="60" y="80" style="font-size:14px; font-weight:600;">Aa</text>' + T + ' x="120" y="80" style="font-size:22px; font-weight:600;">Aa</text>'
+          + '<path class="ic-amber" d="M18 75 H30" stroke-width="2" marker-end="url(#arrow)"/>'
+          + '<path class="ic-amber" d="M152 75 H140" stroke-width="2" marker-end="url(#arrow)"/>'
+          + T + ' x="85" y="118">clamp(min, ideal, max)</text>'
+          + '</svg>'
+      };
+
+      // ---------- topics ----------
+      const topics = [
+        {
+          id: 'boxmodel', label: 'Materi 1', title: 'Box Model',
+          intro: '<p class="lede">Setiap elemen HTML pada dasarnya adalah sebuah kotak (box) — paragraf, gambar, atau div kosong sekalipun. Box Model menjelaskan bagaimana ukuran akhir kotak itu dihitung, dari empat lapisan yang saling membungkus: <b>content</b> (isi sebenarnya), <b>padding</b> (jarak dalam), <b>border</b> (garis tepi), dan <b>margin</b> (jarak luar terhadap elemen tetangga).</p><p class="lede">Ini penting karena secara default (<code class="mono">box-sizing: content-box</code>), <code class="mono">width</code>/<code class="mono">height</code> hanya menghitung bagian content — padding dan border ditambahkan di luar itu, sehingga kotak sering jadi lebih besar dari yang diharapkan. Banyak developer mengatur <code class="mono">box-sizing: border-box</code> secara global agar width yang ditulis sudah termasuk padding dan border.</p><ul class="key-points"><li><code class="mono">content-box</code> (default): width tidak termasuk padding &amp; border</li><li><code class="mono">border-box</code>: width sudah termasuk padding &amp; border — lebih mudah diprediksi</li><li>Margin dua elemen block yang bertemu vertikal bisa "collapse" jadi satu jarak terbesar</li></ul>',
+          icon: icons.boxmodel,
+          controls: [{
+            type: 'buttons', prop: 'layer', label: 'Sorot lapisan', initial: 'content', options: [
+              { value: 'content', label: 'Content' }, { value: 'padding', label: 'Padding' }, { value: 'border', label: 'Border' }, { value: 'margin', label: 'Margin' }]
+          }],
+          previewHtml: '<div class="bm-stage"><div class="bm-margin prev-margin"></div><div class="bm-border prev-border"></div><div class="bm-padding prev-padding"></div><div class="bm-content prev-content">konten</div></div>',
+          codeTemplate: function (s) {
+            const lines = [cssLine('padding', '16px', s.layer === 'padding'), cssLine('border', '9px solid', s.layer === 'border'), cssLine('margin', '14px', s.layer === 'margin')];
+            let html = cssBlock('.box', lines);
+            if (s.layer === 'content') html += '<div class="footer-note" style="color:#B9CBDA;">content = isi di dalam padding — bukan properti CSS tersendiri.</div>';
+            return html;
+          },
+          applyPreview: function (s, root) {
+            root.querySelector('.prev-content').classList.toggle('on', s.layer === 'content');
+            root.querySelector('.prev-padding').classList.toggle('on', s.layer === 'padding');
+            root.querySelector('.prev-border').classList.toggle('on', s.layer === 'border');
+            root.querySelector('.prev-margin').classList.toggle('on', s.layer === 'margin');
+          },
+          quiz: {
+            question: 'Urutan lapisan box model dari dalam ke luar adalah…',
+            explain: 'content → padding → border → margin. Padding ada di dalam border, margin selalu paling luar dan tidak punya warna/latar.',
+            options: [{ label: 'margin → border → padding → content', correct: false }, { label: 'content → padding → border → margin', correct: true }, { label: 'content → border → padding → margin', correct: false }, { label: 'padding → content → border → margin', correct: false }]
+          }
+        },
+        {
+          id: 'positioning', label: 'Materi 2', title: 'Positioning',
+          intro: '<p class="lede">Nilai <code class="mono">position</code> menentukan bagaimana sebuah elemen keluar dari <b>normal flow</b> dokumen — urutan alami elemen block/inline disusun dari atas ke bawah, kiri ke kanan.</p><ul class="key-points"><li><code class="mono">static</code> (default): mengikuti normal flow apa adanya; <code class="mono">top/left/right/bottom</code> tidak berpengaruh</li><li><code class="mono">relative</code>: tetap menempati ruang aslinya, lalu digeser secara visual relatif terhadap posisi itu</li><li><code class="mono">absolute</code>: keluar dari normal flow, diposisikan relatif terhadap <b>containing block</b> — induk terdekat yang position-nya bukan static</li><li><code class="mono">fixed</code>: containing block-nya adalah viewport, sehingga tidak ikut scroll</li><li><code class="mono">sticky</code>: hybrid relative/fixed — menempel setelah ambang scroll tertentu, selama induknya masih terlihat</li></ul><p class="lede">Kesalahan paling umum: menulis <code class="mono">absolute</code> tanpa memberi <code class="mono">position: relative</code> pada induknya, sehingga elemen menempel ke <code class="mono">&lt;html&gt;</code>, bukan ke kontainer yang dimaksud.</p>',
+          icon: icons.positioning,
+          controls: [{
+            type: 'buttons', prop: 'position', label: 'position', initial: 'static', options: [
+              { value: 'static', label: 'static' }, { value: 'relative', label: 'relative' }, { value: 'absolute', label: 'absolute' }, { value: 'fixed', label: 'fixed' }, { value: 'sticky', label: 'sticky' }]
+          }],
+          previewHtml: '<div class="pos-frame"><div class="pos-scroll-note">bingkai induk (scroll ↓)</div><div class="pos-scroll prev-scroll"><div class="pos-tall"><div class="pos-box prev-target">box</div></div></div></div>',
+          codeTemplate: function (s) {
+            const lines = [cssLine('position', s.position, true)];
+            if (s.position === 'relative') { lines.push(cssLine('top', '16px'), cssLine('left', '40px')); }
+            else if (s.position === 'absolute') { lines.push(cssLine('top', '0'), cssLine('right', '0')); }
+            else if (s.position === 'fixed') { lines.push(cssLine('top', '8px'), cssLine('right', '8px')); }
+            else if (s.position === 'sticky') { lines.push(cssLine('top', '0')); }
+            return cssBlock('.box', lines);
+          },
+          applyPreview: function (s, root) {
+            const box = root.querySelector('.prev-target');
+            box.style.position = s.position; box.style.top = box.style.left = box.style.right = '';
+            if (s.position === 'relative') { box.style.top = '16px'; box.style.left = '40px'; }
+            else if (s.position === 'absolute') { box.style.top = '0'; box.style.right = '0'; }
+            else if (s.position === 'fixed') { box.style.top = '8px'; box.style.right = '8px'; }
+            else if (s.position === 'sticky') { box.style.top = '0'; }
+            root.querySelector('.prev-scroll').scrollTop = 0;
+          },
+          quiz: {
+            question: 'Elemen dengan position: absolute akan diposisikan relatif terhadap…',
+            explain: 'Induk terdekat yang position-nya bukan static. Kalau tidak ada, ia jatuh sampai ke elemen html (mirip terhadap viewport).',
+            options: [{ label: 'Viewport, selalu', correct: false }, { label: 'Induk terdekat yang position-nya bukan static', correct: true }, { label: 'Elemen tepat sebelumnya di DOM', correct: false }, { label: 'Elemen <body>, selalu', correct: false }]
+          }
+        },
+        {
+          id: 'stacking', label: 'Materi 3', title: 'Stacking Context (z-index)',
+          intro: '<p class="lede"><code class="mono">z-index</code> mengatur <b>stacking order</b> antar elemen yang saling menutupi di sumbu Z — tapi hanya berlaku pada elemen yang bukan <code class="mono">position: static</code>.</p><p class="lede">Konsep yang lebih dalam adalah <b>stacking context</b>: sebuah "ruang tumpuk" independen yang dibentuk oleh elemen tertentu (misalnya elemen dengan position + z-index, <code class="mono">opacity &lt; 1</code>, <code class="mono">transform</code>, atau <code class="mono">filter</code>). Di dalam satu stacking context, z-index anak-anaknya hanya dibandingkan satu sama lain — tidak bisa "menembus" ke luar stacking context induknya, meski nilainya sangat besar.</p><ul class="key-points"><li>z-index tanpa position bukan-static tidak berpengaruh sama sekali</li><li>Setiap stacking context baru "mengunci" jangkauan perbandingan z-index di dalamnya</li><li>Ini alasan klasik dropdown/modal tertutup elemen lain walau z-index-nya sudah sangat tinggi</li></ul>',
+          icon: icons.stacking,
+          controls: [{
+            type: 'buttons', prop: 'top', label: 'Beri z-index tertinggi ke', initial: 'b', options: [
+              { value: 'a', label: 'Kotak A' }, { value: 'b', label: 'Kotak B' }, { value: 'c', label: 'Kotak C' }]
+          }],
+          previewHtml: '<div class="zstage"><div class="zbox z-a prev-a" style="left:16px; top:18px;">A</div><div class="zbox z-b prev-b" style="left:64px; top:56px;">B</div><div class="zbox z-c prev-c" style="left:112px; top:94px;">C</div></div>',
+          zMap: { a: { a: 3, b: 1, c: 2 }, b: { a: 1, b: 3, c: 2 }, c: { a: 1, b: 2, c: 3 } },
+          codeTemplate: function (s) {
+            const z = this.zMap[s.top];
+            return cssBlock('.kotak-a', [cssLine('position', 'relative'), cssLine('z-index', z.a, s.top === 'a')])
+              + cssBlock('.kotak-b', [cssLine('position', 'relative'), cssLine('z-index', z.b, s.top === 'b')])
+              + cssBlock('.kotak-c', [cssLine('position', 'relative'), cssLine('z-index', z.c, s.top === 'c')]);
+          },
+          applyPreview: function (s, root) {
+            const z = this.zMap[s.top];
+            ['a', 'b', 'c'].forEach(function (k) { const el = root.querySelector('.prev-' + k); el.style.zIndex = z[k]; el.textContent = k.toUpperCase() + ' · z:' + z[k]; });
+          },
+          quiz: {
+            question: 'z-index hanya berpengaruh pada elemen dengan position apa?',
+            explain: 'Selain static — yaitu relative, absolute, fixed, atau sticky. Elemen static akan mengabaikan z-index sepenuhnya.',
+            options: [{ label: 'static saja', correct: false }, { label: 'Selain static (relative, absolute, fixed, sticky)', correct: true }, { label: 'Semua nilai position, tanpa kecuali', correct: false }, { label: 'Hanya fixed', correct: false }]
+          }
+        },
+        {
+          id: 'flexbasic', label: 'Materi 4', title: 'Flexbox: Basics',
+          intro: '<p class="lede">Flexbox (<code class="mono">display: flex</code>) menata anak elemen sepanjang satu arah utama yang disebut <b>main axis</b>, dengan sumbu tegak lurusnya disebut <b>cross axis</b>.</p><ul class="key-points"><li><code class="mono">flex-direction</code> menentukan arah main axis: <code class="mono">row</code> (default) atau <code class="mono">column</code>, plus versi <code class="mono">-reverse</code></li><li><code class="mono">justify-content</code> mengatur distribusi ruang sepanjang main axis: <code class="mono">flex-start</code>, <code class="mono">center</code>, <code class="mono">space-between</code>, <code class="mono">space-around</code></li><li><code class="mono">align-items</code> mengatur posisi item sepanjang cross axis: <code class="mono">stretch</code> (default), <code class="mono">flex-start</code>, <code class="mono">center</code>, <code class="mono">flex-end</code></li></ul><p class="lede">Yang sering membingungkan pemula: karena main axis berubah mengikuti flex-direction, justify-content dan align-items ikut "bertukar peran" secara visual — saat <code class="mono">direction: column</code>, justify-content-lah yang mengatur arah vertikal.</p>',
+          icon: icons.flexbasic,
+          controls: [
+            { type: 'buttons', prop: 'direction', label: 'flex-direction', initial: 'row', options: [{ value: 'row', label: 'row' }, { value: 'column', label: 'column' }] },
+            { type: 'buttons', prop: 'justify', label: 'justify-content', initial: 'flex-start', options: [{ value: 'flex-start', label: 'start' }, { value: 'center', label: 'center' }, { value: 'space-between', label: 'between' }, { value: 'space-around', label: 'around' }] },
+            { type: 'buttons', prop: 'align', label: 'align-items', initial: 'stretch', options: [{ value: 'flex-start', label: 'start' }, { value: 'stretch', label: 'stretch' }, { value: 'center', label: 'center' }, { value: 'flex-end', label: 'end' }] }
+          ],
+          previewHtml: '<div class="flex-stage prev-target"><div class="flex-item">1</div><div class="flex-item" style="min-height:70px;">2</div><div class="flex-item">3</div><div class="flex-item" style="min-height:56px;">4</div><div class="flex-item">5</div></div>',
+          codeTemplate: function (s) {
+            return cssBlock('.container', [cssLine('display', 'flex'), cssLine('flex-direction', s.direction, true), cssLine('justify-content', s.justify, true), cssLine('align-items', s.align, true)]);
+          },
+          applyPreview: function (s, root) {
+            const el = root.querySelector('.prev-target');
+            el.style.flexDirection = s.direction; el.style.justifyContent = s.justify; el.style.alignItems = s.align;
+          },
+          quiz: {
+            question: 'Jika flex-direction: column, maka justify-content mengatur sumbu…',
+            explain: 'justify-content selalu mengikuti main axis. Saat flex-direction diubah ke column, main axis-nya jadi vertikal.',
+            options: [{ label: 'Horizontal, tidak pernah berubah', correct: false }, { label: 'Vertikal — mengikuti main axis', correct: true }, { label: 'Diagonal', correct: false }, { label: 'Tidak berpengaruh sama sekali', correct: false }]
+          }
+        },
+        {
+          id: 'flexadv', label: 'Materi 5', title: 'Flexbox: Advanced',
+          intro: '<p class="lede">Setelah menguasai axis dasar, tiga properti ini membuat Flexbox terasa benar-benar powerful untuk layout nyata.</p><ul class="key-points"><li><code class="mono">flex-wrap: wrap</code> mengizinkan item pindah ke baris baru saat ruang tidak cukup, alih-alih dipaksa menyusut di satu baris (perilaku default <code class="mono">nowrap</code>)</li><li><code class="mono">flex-grow</code>, <code class="mono">flex-shrink</code>, dan <code class="mono">flex-basis</code> (sering disingkat <code class="mono">flex: grow shrink basis</code>) mengatur bagaimana item membesar/mengecil mengisi sisa ruang</li><li><code class="mono">order</code> mengubah urutan visual sebuah item tanpa mengubah urutan aslinya di HTML — berguna untuk reordering responsif, tapi perlu hati-hati karena bisa membingungkan urutan tab/keyboard navigation</li></ul>',
+          icon: icons.flexadv,
+          controls: [
+            { type: 'buttons', prop: 'wrap', label: 'flex-wrap', initial: 'nowrap', options: [{ value: 'nowrap', label: 'nowrap' }, { value: 'wrap', label: 'wrap' }] },
+            { type: 'buttons', prop: 'width', label: 'lebar container', initial: 'full', options: [{ value: 'full', label: 'Penuh' }, { value: 'narrow', label: 'Sempit' }] },
+            { type: 'buttons', prop: 'grow', label: 'flex-grow pada Item 3', initial: 'off', options: [{ value: 'off', label: 'Mati' }, { value: 'on', label: 'Aktif' }] },
+            { type: 'buttons', prop: 'order', label: 'order', initial: 'normal', options: [{ value: 'normal', label: 'Normal' }, { value: 'swap', label: 'Tukar 1 & 5' }] }
+          ],
+          previewHtml: '<div class="flex-stage prev-target"><div class="flex-item prev-item1">1</div><div class="flex-item">2</div><div class="flex-item prev-item3">3</div><div class="flex-item">4</div><div class="flex-item prev-item5">5</div></div>',
+          codeTemplate: function (s) {
+            const containerLines = [cssLine('display', 'flex'), cssLine('flex-wrap', s.wrap, true)];
+            if (s.width === 'narrow') { containerLines.push(cssLine('width', '220px', true)); }
+            let html = cssBlock('.container', containerLines);
+            html += cssBlock('.item-3', [cssLine('flex-grow', s.grow === 'on' ? '1' : '0', s.grow === 'on')]);
+            html += cssBlock('.item-1', [cssLine('order', s.order === 'swap' ? '5' : '0', s.order === 'swap')]);
+            html += cssBlock('.item-5', [cssLine('order', s.order === 'swap' ? '-1' : '0', s.order === 'swap')]);
+            return html;
+          },
+          applyPreview: function (s, root) {
+            const stage = root.querySelector('.prev-target');
+            stage.style.flexWrap = s.wrap; stage.style.width = s.width === 'full' ? '100%' : '220px';
+            root.querySelector('.prev-item3').style.flexGrow = s.grow === 'on' ? '1' : '0';
+            root.querySelector('.prev-item1').style.order = s.order === 'swap' ? '5' : '';
+            root.querySelector('.prev-item5').style.order = s.order === 'swap' ? '-1' : '';
+          },
+          quiz: {
+            question: 'Properti apa yang mengizinkan item flex "pindah baris" saat ruang tidak cukup?',
+            explain: 'flex-wrap: wrap. Tanpa ini, item akan dipaksa menyusut (flex-shrink) di satu baris, bukan berpindah ke baris baru.',
+            options: [{ label: 'flex-grow', correct: false }, { label: 'flex-wrap', correct: true }, { label: 'flex-basis', correct: false }, { label: 'order', correct: false }]
+          }
+        },
+        {
+          id: 'gridbasic', label: 'Materi 6', title: 'CSS Grid: Basics',
+          intro: '<p class="lede">CSS Grid (<code class="mono">display: grid</code>) menata elemen dalam <b>dua dimensi</b> sekaligus — baris dan kolom — berbeda dari Flexbox yang hanya satu dimensi.</p><ul class="key-points"><li><code class="mono">grid-template-columns</code> dan <code class="mono">grid-template-rows</code> mendefinisikan ukuran tiap kolom/baris</li><li>Unit <code class="mono">fr</code> (fraction) membagi sisa ruang kosong secara proporsional — <code class="mono">1fr 2fr 1fr</code> menghasilkan 3 kolom dengan rasio lebar 1:2:1</li><li><code class="mono">gap</code> mengatur jarak antar sel tanpa margin manual, dan tidak menambah jarak di tepi terluar grid</li></ul><p class="lede">Grid ideal untuk struktur halaman besar (header, sidebar, main, footer); Flexbox lebih pas untuk komponen kecil satu arah (navbar, toolbar, baris kartu).</p>',
+          icon: icons.gridbasic,
+          controls: [{
+            type: 'buttons', prop: 'cols', label: 'grid-template-columns', initial: 'repeat(3, 1fr)', options: [
+              { value: 'repeat(2, 1fr)', label: '2 kolom sama' }, { value: 'repeat(3, 1fr)', label: '3 kolom sama' }, { value: '1fr 2fr 1fr', label: '1fr 2fr 1fr' }]
+          }],
+          previewHtml: '<div class="grid-stage prev-target" style="grid-template-columns:repeat(3,1fr);"><div class="grid-cell">1</div><div class="grid-cell">2</div><div class="grid-cell">3</div><div class="grid-cell">4</div><div class="grid-cell">5</div><div class="grid-cell">6</div></div>',
+          codeTemplate: function (s) { return cssBlock('.grid', [cssLine('display', 'grid'), cssLine('grid-template-columns', s.cols, true), cssLine('gap', '10px')]); },
+          applyPreview: function (s, root) { root.querySelector('.prev-target').style.gridTemplateColumns = s.cols; },
+          quiz: {
+            question: 'grid-template-columns: 1fr 2fr 1fr menghasilkan berapa kolom, dengan proporsi apa?',
+            explain: '3 kolom, ruang kosong dibagi dengan rasio 1:2:1 — kolom tengah dua kali lebih lebar dari kolom kiri/kanan.',
+            options: [{ label: '3 kolom, sama rata', correct: false }, { label: '3 kolom, proporsi 1:2:1', correct: true }, { label: '4 kolom', correct: false }, { label: '1 kolom besar', correct: false }]
+          }
+        },
+        {
+          id: 'gridadv', label: 'Materi 7', title: 'Grid: auto-fit + minmax()',
+          intro: '<p class="lede">Kombinasi <code class="mono">repeat()</code>, <code class="mono">auto-fit</code>/<code class="mono">auto-fill</code>, dan <code class="mono">minmax()</code> memungkinkan grid responsif tanpa satu pun media query.</p><ul class="key-points"><li><code class="mono">minmax(200px, 1fr)</code> berarti tiap kolom minimal 200px, tapi bisa melebar mengisi sisa ruang (1fr) jika muat</li><li><code class="mono">repeat(auto-fit, minmax(200px, 1fr))</code> meminta browser menghitung sendiri berapa kolom 200px+ yang muat, lalu melebarkannya merata</li><li><code class="mono">auto-fill</code> mirip auto-fit, tapi tetap menyisakan "slot" kolom kosong jika item lebih sedikit dari kolom yang muat</li></ul><p class="lede">Pola ini sangat populer untuk grid galeri foto atau kartu produk yang jumlahnya dinamis.</p>',
+          icon: icons.gridadv,
+          controls: [
+            { type: 'buttons', prop: 'base', label: 'minmax base', initial: '120', options: [{ value: '80', label: '80px' }, { value: '120', label: '120px' }, { value: '160', label: '160px' }] },
+            { type: 'range', prop: 'width', label: 'lebar container', initial: 340, min: 180, max: 380, format: function (v) { return v + 'px'; } }
+          ],
+          previewHtml: '<div class="autoFitWrap prev-wrap" style="width:340px;"><div class="grid-stage prev-target" style="grid-template-columns:repeat(auto-fit, minmax(120px,1fr));"><div class="grid-cell">1</div><div class="grid-cell">2</div><div class="grid-cell">3</div><div class="grid-cell">4</div><div class="grid-cell">5</div><div class="grid-cell">6</div></div></div>',
+          codeTemplate: function (s) { return cssBlock('.grid', [cssLine('display', 'grid'), cssLine('grid-template-columns', 'repeat(auto-fit, minmax(' + s.base + 'px, 1fr))', true)]); },
+          applyPreview: function (s, root) {
+            root.querySelector('.prev-wrap').style.width = Math.min(s.width, 380) + 'px';
+            root.querySelector('.prev-target').style.gridTemplateColumns = 'repeat(auto-fit, minmax(' + s.base + 'px,1fr))';
+          },
+          quiz: {
+            question: 'repeat(auto-fit, minmax(200px, 1fr)) berguna untuk…',
+            explain: 'Grid responsif: browser menghitung sendiri berapa kolom yang muat (minimal 200px tiap kolom) tanpa breakpoint manual.',
+            options: [{ label: 'Grid statis yang tidak pernah berubah', correct: false }, { label: 'Grid responsif yang menyesuaikan jumlah kolom otomatis', correct: true }, { label: 'Grid dengan tepat 1 kolom permanen', correct: false }, { label: 'Mengatur warna sel grid', correct: false }]
+          }
+        },
+        {
+          id: 'gridspan', label: 'Materi 8', title: 'Grid Spanning',
+          intro: '<p class="lede"><code class="mono">grid-column</code> dan <code class="mono">grid-row</code> memungkinkan sebuah item melebar mencakup lebih dari satu track (kolom/baris).</p><ul class="key-points"><li><code class="mono">grid-column: span 2</code> membuat item melebar 2 kolom, dimulai dari posisi otomatisnya saat ini</li><li>Sintaks eksplisit seperti <code class="mono">grid-column: 1 / 3</code> menempatkan item dari garis kolom ke-1 sampai ke-3</li><li>Kombinasi span di kedua sumbu memungkinkan pola layout majalah/dashboard, di mana satu item "hero" terlihat jauh lebih besar dari item lainnya</li></ul>',
+          icon: icons.gridspan,
+          controls: [{
+            type: 'buttons', prop: 'span', label: 'Beri span 2 kolom ke', initial: '2', options: [
+              { value: 'none', label: 'Tidak ada' }, { value: '2', label: 'Sel 2' }, { value: '4', label: 'Sel 4' }]
+          }],
+          previewHtml: '<div class="grid-stage prev-target" style="grid-template-columns:repeat(4,1fr);">' + [1, 2, 3, 4, 5, 6].map(function (i) { return '<div class="grid-cell prev-cell" data-idx="' + i + '">' + i + '</div>'; }).join('') + '</div>',
+          codeTemplate: function (s) {
+            if (s.span === 'none') return '<div class="footer-note" style="color:#B9CBDA;">Tidak ada sel yang di-span — semua sel memakai 1 kolom.</div>';
+            return cssBlock('.sel-' + s.span, [cssLine('grid-column', 'span 2', true)]);
+          },
+          applyPreview: function (s, root) {
+            root.querySelectorAll('.prev-cell').forEach(function (cell) {
+              const idx = cell.dataset.idx;
+              if (idx === s.span) { cell.style.gridColumn = 'span 2'; cell.textContent = idx + ' (span 2)'; }
+              else { cell.style.gridColumn = ''; cell.textContent = idx; }
+            });
+          },
+          quiz: {
+            question: 'grid-column: span 2 artinya…',
+            explain: 'Elemen melebar untuk mencakup 2 kolom grid, dimulai dari posisinya saat ini. Analognya di baris adalah grid-row: span 2.',
+            options: [{ label: 'Elemen melompat 2 baris ke bawah', correct: false }, { label: 'Elemen melebar mencakup 2 kolom', correct: true }, { label: 'Elemen dipindah ke kolom ke-2', correct: false }, { label: 'Menghapus 2 kolom dari grid', correct: false }]
+          }
+        },
+        {
+          id: 'gridareas', label: 'Materi 9', title: 'Grid Template Areas',
+          intro: '<p class="lede"><code class="mono">grid-template-areas</code> memberi nama pada tiap wilayah grid, lalu memetakan elemen ke wilayah itu lewat <code class="mono">grid-area</code> — membuat struktur layout terlihat langsung dari bentuk teksnya di CSS, mirip ASCII art.</p><p class="lede">Keunggulan terbesarnya: mengubah total struktur layout (misalnya dari desktop ke mobile) cukup dengan menulis ulang string grid-template-areas di dalam media query — tanpa mengubah urutan HTML sama sekali. Ini memisahkan "urutan makna konten" (HTML) dari "urutan visual" (CSS) secara elegan.</p>',
+          icon: icons.gridareas,
+          controls: [{ type: 'buttons', prop: 'layout', label: 'Ukuran layar', initial: 'wide', options: [{ value: 'wide', label: 'Wide' }, { value: 'narrow', label: 'Narrow' }] }],
+          previewHtml: '<div class="areas-demo prev-target"><div class="a-head">header</div><div class="a-side">sidebar</div><div class="a-main">main</div><div class="a-foot">footer</div></div>',
+          codeTemplate: function (s) {
+            const areas = s.layout === 'wide' ? '"head head" "side main" "foot foot"' : '"head" "side" "main" "foot"';
+            const cols = s.layout === 'wide' ? '90px 1fr' : '1fr';
+            return cssBlock('.layout', [cssLine('grid-template-columns', cols, true), cssLine('grid-template-areas', areas, true)]);
+          },
+          applyPreview: function (s, root) { root.querySelector('.prev-target').classList.toggle('stacked', s.layout === 'narrow'); },
+          quiz: {
+            question: 'Keuntungan utama grid-template-areas dibanding pengaturan grid-column manual adalah…',
+            explain: 'Kode lebih terbaca — bentuk layout langsung terlihat dari susunan nama area di CSS, tanpa perlu membayangkan nomor baris/kolom.',
+            options: [{ label: 'Rendernya lebih cepat', correct: false }, { label: 'Kode lebih terbaca, layout tervisualisasi langsung di CSS', correct: true }, { label: 'Wajib dipakai di semua grid', correct: false }, { label: 'Tidak membutuhkan HTML sama sekali', correct: false }]
+          }
+        },
+        {
+          id: 'responsive', label: 'Materi 10', title: 'Responsive: Container Queries',
+          intro: '<p class="lede">Media query klasik (<code class="mono">@media (min-width: ...)</code>) merespons lebar <b>viewport</b> browser secara keseluruhan. Masalahnya, sebuah komponen (misalnya kartu produk) bisa diletakkan di kolom sempit ataupun lebar tergantung halaman — padahal viewport-nya sama.</p><p class="lede"><b>Container Queries</b> (<code class="mono">@container</code>) menjawab ini: sebuah elemen diberi <code class="mono">container-type: inline-size</code>, lalu elemen di dalamnya bisa merespons lebar induk itu sendiri, bukan lebar viewport. Ini membuat komponen benar-benar "sadar konteks" dan bisa dipakai ulang di mana saja tanpa menulis ulang breakpoint.</p>',
+          icon: icons.responsive,
+          controls: [{ type: 'range', prop: 'width', label: 'lebar container', initial: 350, min: 200, max: 380, format: function (v) { return v + 'px'; } }],
+          previewHtml: '<div class="resp-frame-outer prev-wrap" style="width:350px;"><div class="resp-grid"><div class="r-cell">Blok A</div><div class="r-cell">Blok B</div><div class="r-cell">Blok C</div></div></div>',
+          codeTemplate: function (s) {
+            const cols = s.width >= 320 ? 3 : 1;
+            return '<div class="cs-block"><div class="cs-sel">.container { container-type: inline-size; }</div></div>'
+              + '<div class="cs-block"><div class="cs-sel">@container (min-width: 320px) {</div><div class="cs-line cs-hl">.grid { grid-template-columns: repeat(3, 1fr); }</div><div class="cs-sel">}</div></div>'
+              + '<div class="footer-note" style="color:#B9CBDA;">Lebar saat ini: ' + s.width + 'px → ' + cols + ' kolom aktif</div>';
+          },
+          applyPreview: function (s, root) { root.querySelector('.prev-wrap').style.width = s.width + 'px'; },
+          quiz: {
+            question: 'Apa beda @container dengan @media?',
+            explain: '@container merespons ukuran elemen induk (container) tempatnya berada, sedangkan @media klasik merespons ukuran viewport browser.',
+            options: [{ label: 'Sama persis, hanya nama berbeda', correct: false }, { label: '@container merespons ukuran induk, @media merespons ukuran viewport', correct: true }, { label: '@container hanya bisa mengatur warna', correct: false }, { label: '@media lebih baru dari @container', correct: false }]
+          }
+        },
+        {
+          id: 'centering', label: 'Materi 11', title: 'Centering Techniques',
+          intro: '<p class="lede">Ada beberapa cara valid untuk melakukan <b>centering</b> di CSS, dan pilihannya tergantung situasi.</p><ul class="key-points"><li><code class="mono">display: flex</code> + <code class="mono">align-items: center</code> + <code class="mono">justify-content: center</code> — paling umum dipakai sekarang, bekerja untuk satu atau banyak item</li><li><code class="mono">display: grid</code> + <code class="mono">place-items: center</code> — versi paling ringkas, satu baris untuk centering horizontal &amp; vertikal sekaligus</li><li><code class="mono">position: absolute</code> + <code class="mono">top: 50%; left: 50%; transform: translate(-50%, -50%)</code> — teknik lama yang masih relevan saat elemen memang perlu keluar dari normal flow, misalnya modal/overlay</li></ul>',
+          icon: icons.centering,
+          controls: [{
+            type: 'buttons', prop: 'method', label: 'Teknik', initial: 'flex', options: [
+              { value: 'flex', label: 'Flexbox' }, { value: 'grid', label: 'Grid' }, { value: 'absolute', label: 'Absolute + transform' }]
+          }],
+          previewHtml: '<div class="center-demo prev-target"><div class="center-dot"></div></div>',
+          codeTemplate: function (s) {
+            if (s.method === 'flex') return cssBlock('.container', [cssLine('display', 'flex', true), cssLine('align-items', 'center', true), cssLine('justify-content', 'center', true)]);
+            if (s.method === 'grid') return cssBlock('.container', [cssLine('display', 'grid', true), cssLine('place-items', 'center', true)]);
+            return cssBlock('.container', [cssLine('position', 'relative')]) + cssBlock('.dot', [cssLine('position', 'absolute', true), cssLine('top', '50%', true), cssLine('left', '50%', true), cssLine('transform', 'translate(-50%, -50%)', true)]);
+          },
+          applyPreview: function (s, root) {
+            const el = root.querySelector('.prev-target');
+            el.className = 'center-demo prev-target ' + (s.method === 'flex' ? 'cd-flex' : s.method === 'grid' ? 'cd-grid' : 'cd-abs');
+          },
+          quiz: {
+            question: 'Teknik position: absolute + transform: translate(-50%, -50%) bekerja dengan cara…',
+            explain: 'top/left 50% menempatkan sudut kiri-atas elemen tepat di tengah induk; translate(-50%,-50%) menggeser balik elemen sejauh setengah lebar/tingginya sendiri, sehingga benar-benar center.',
+            options: [{ label: 'top/left 50% ke tengah induk, lalu translate mengoreksi sejauh setengah ukuran elemen itu sendiri', correct: true }, { label: 'transform hanya untuk animasi, tidak memengaruhi posisi', correct: false }, { label: '50% selalu mengacu ke ukuran viewport', correct: false }, { label: 'Teknik ini hanya berfungsi untuk teks', correct: false }]
+          }
+        },
+        {
+          id: 'fluid', label: 'Materi 12', title: 'Fluid Units: clamp() &amp; cqi',
+          intro: '<p class="lede"><code class="mono">clamp(minimum, ideal, maksimum)</code> mengizinkan sebuah nilai (biasanya font-size atau spacing) menyusut dan membesar secara halus dalam batas aman, tanpa media query bertingkat.</p><p class="lede">Digabung dengan unit berbasis viewport (<code class="mono">vw</code>) atau container (<code class="mono">cqi</code>, <code class="mono">cqb</code> — container query units), nilai "ideal" bisa mengikuti lebar layar atau lebar induk secara proporsional. <code class="mono">cqi</code> = 1% dari inline-size (lebar) container terdekat yang mengaktifkan <code class="mono">container-type</code> — mirip vw, tapi relatif terhadap komponen, bukan seluruh layar.</p>',
+          icon: icons.fluid,
+          controls: [{ type: 'range', prop: 'width', label: 'lebar container', initial: 360, min: 200, max: 380, format: function (v) { return v + 'px'; } }],
+          previewHtml: '<div class="resp-frame-outer prev-wrap" style="width:360px;"><div style="background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; font-family:\'IBM Plex Mono\'; text-align:center; font-size:clamp(13px,5cqi,24px);">Aa — ikut menyusut/membesar</div></div>',
+          codeTemplate: function (s) { return cssBlock('.judul', [cssLine('font-size', 'clamp(13px, 5cqi, 24px)', true)]); },
+          applyPreview: function (s, root) { root.querySelector('.prev-wrap').style.width = s.width + 'px'; },
+          quiz: {
+            question: 'Apa itu unit cqi?',
+            explain: 'cqi = 1% dari inline-size (lebar) container terdekat yang mengaktifkan container-type — mirip vw, tapi relatif ke container, bukan viewport.',
+            options: [{ label: 'Persentase dari lebar container terdekat yang mengaktifkan container-type', correct: true }, { label: 'Sama seperti vw, selalu mengacu ke viewport', correct: false }, { label: 'Warna kustom di CSS', correct: false }, { label: 'Singkatan dari "click quantity indicator"', correct: false }]
+          }
+        }
+      ];
+
+      const deckPlan = [
+        { kind: 'static', html: titleHTML },
+        { kind: 'static', html: agendaHTML },
+        { kind: 'topic', id: 'boxmodel' }, { kind: 'topic', id: 'positioning' }, { kind: 'topic', id: 'stacking' },
+        { kind: 'topic', id: 'flexbasic' }, { kind: 'topic', id: 'flexadv' },
+        { kind: 'static', html: flexPatternsHTML },
+        { kind: 'topic', id: 'gridbasic' }, { kind: 'topic', id: 'gridadv' }, { kind: 'topic', id: 'gridspan' }, { kind: 'topic', id: 'gridareas' },
+        { kind: 'topic', id: 'responsive' }, { kind: 'topic', id: 'centering' }, { kind: 'topic', id: 'fluid' },
+        { kind: 'static', html: subgridHTML },
+        { kind: 'static', html: challengeHTML },
+        { kind: 'static', html: challengeGuideHTML },
+        { kind: 'static', html: closingHTML }
+      ];
+      const topicById = {}; topics.forEach(function (t) { topicById[t.id] = t; });
+
+      function renderControls(topic) {
+        return topic.controls.map(function (ctrl) {
+          if (ctrl.type === 'buttons') {
+            const btns = ctrl.options.map(function (o) { return '<button class="choice' + (o.value === ctrl.initial ? ' on' : '') + '" data-value="' + o.value + '">' + o.label + '</button>'; }).join('');
+            return '<div class="control-group"><label>' + ctrl.label + '</label><div class="choice-row" data-prop="' + ctrl.prop + '">' + btns + '</div></div>';
+          }
+          return '<div class="control-group"><label>' + ctrl.label + '</label><input type="range" min="' + ctrl.min + '" max="' + ctrl.max + '" value="' + ctrl.initial + '" data-prop="' + ctrl.prop + '" class="ex-range"><div class="mono range-val" style="color:var(--amber); margin-top:6px;" data-range-label>' + ctrl.format(ctrl.initial) + '</div></div>';
+        }).join('');
+      }
+
+      function renderTopic(topic) {
+        let html = '<section class="slide" id="intro-' + topic.id + '">';
+        html += '<div class="tag">' + topic.label + '</div><h2 class="sub">' + topic.title + '</h2>';
+        html += '<div class="intro-layout"><div class="intro-text">' + topic.intro + '</div><div class="intro-visual">' + topic.icon + '</div></div>';
+        html += '</section>';
+
+        html += '<section class="slide" data-example="' + topic.id + '">';
+        html += '<div class="tag tag-muted">' + topic.title + ' — Contoh interaktif</div>';
+        html += '<div class="example-layout">';
+        html += '<div class="ex-controls">' + renderControls(topic) + '</div>';
+        html += '<div><div class="example-col-label">Kode CSS (raw)</div><div class="code-panel" data-code></div></div>';
+        html += '<div><div class="example-col-label">Hasil (live)</div><div class="ex-result" data-result>' + topic.previewHtml + '</div></div>';
+        html += '</div></section>';
+
+        topic.quiz.shuffled = shuffle(topic.quiz.options);
+        html += '<section class="slide qc-slide" data-quiz="' + topic.id + '">';
+        html += '<div class="tag tag-mint">Cek pemahaman · ' + topic.title + '</div>';
+        html += '<h2 class="sub">' + topic.quiz.question + '</h2>';
+        html += '<div class="qc-options">' + topic.quiz.shuffled.map(function (o, i) { return '<button class="qc-option" data-idx="' + i + '">' + o.label + '</button>'; }).join('') + '</div>';
+        html += '<p class="qc-feedback"></p>';
+        html += '</section>';
+        return html;
+      }
+
+      let slidesHTML = '';
+      deckPlan.forEach(function (entry) {
+        slidesHTML += entry.kind === 'static' ? entry.html : renderTopic(topicById[entry.id]);
+      });
+      document.getElementById('slides').innerHTML = slidesHTML;
+
+      // ---------- theme toggle ----------
+      const themeToggle = document.getElementById('themeToggle');
+      const sunIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Light</span>';
+      const moonIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>Dark</span>';
+      let isLight = false;
+      themeToggle.addEventListener('click', function () {
+        isLight = !isLight;
+        document.documentElement.classList.toggle('light-theme', isLight);
+        themeToggle.innerHTML = isLight ? moonIcon : sunIcon;
+      });
+
+      // ---------- wire up each topic's example + quiz ----------
+      const COOLDOWN = 0; // seconds before a failed quiz can be retried
+      topics.forEach(function (topic) {
+        const exampleSection = document.querySelector('[data-example="' + topic.id + '"]');
+        const codeEl = exampleSection.querySelector('[data-code]');
+        const resultEl = exampleSection.querySelector('[data-result]');
+        const state = {};
+        topic.controls.forEach(function (c) { state[c.prop] = c.initial; });
+
+        function update() {
+          codeEl.innerHTML = topic.codeTemplate(state);
+          topic.applyPreview(state, resultEl);
+        }
+        exampleSection.querySelectorAll('.choice-row').forEach(function (group) {
+          const prop = group.dataset.prop;
+          group.addEventListener('click', function (e) {
+            const btn = e.target.closest('.choice'); if (!btn) return;
+            group.querySelectorAll('.choice').forEach(function (b) { b.classList.remove('on'); });
+            btn.classList.add('on');
+            state[prop] = btn.dataset.value;
+            update();
+          });
+        });
+        exampleSection.querySelectorAll('.ex-range').forEach(function (input) {
+          const prop = input.dataset.prop;
+          const ctrl = topic.controls.find(function (c) { return c.prop === prop; });
+          const label = input.parentElement.querySelector('[data-range-label]');
+          input.addEventListener('input', function () {
+            state[prop] = parseFloat(input.value);
+            label.textContent = ctrl.format(state[prop]);
+            update();
+          });
+        });
+        update();
+
+        // quiz wiring: wrong answer does NOT reveal the correct one; hard gate + cooldown
+        const quizSection = document.querySelector('[data-quiz="' + topic.id + '"]');
+        const feedback = quizSection.querySelector('.qc-feedback');
+        let answered = false;
+        let cooldownTimer = null;
+
+        function clearTimer() {
+          if (cooldownTimer) {
+            clearInterval(cooldownTimer);
+            cooldownTimer = null;
+          }
+        }
+
+        function resetQuiz() {
+          clearTimer();
+          quizSection.querySelectorAll('.qc-option').forEach(function (b) { b.classList.remove('correct', 'wrong', 'locked'); });
+          feedback.textContent = ''; feedback.className = 'qc-feedback';
+          answered = false;
+        }
+
+        quizSection.querySelectorAll('.qc-option').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            if (answered) return;
+            answered = true;
+            clearTimer();
+            quizSection.querySelectorAll('.qc-option').forEach(function (b) { b.classList.add('locked'); });
+            const chosen = topic.quiz.shuffled[parseInt(btn.dataset.idx, 10)];
+            if (chosen.correct) {
+              btn.classList.add('correct');
+              feedback.className = 'qc-feedback good';
+              feedback.textContent = 'Betul — ' + topic.quiz.explain;
+              quizSection.classList.add('passed');
+              if (dots[slides.indexOf(quizSection)]) {
+                dots[slides.indexOf(quizSection)].classList.add('passed-dot');
+              }
+              updateNextState();
+            } else {
+              btn.classList.add('wrong');
+              let remaining = COOLDOWN;
+              feedback.className = 'qc-feedback bad';
+              feedback.textContent = 'Belum tepat. Pelajari lagi materinya — kembali otomatis dalam ' + remaining + 's…';
+              cooldownTimer = setInterval(function () {
+                remaining--;
+                const stillHere = slides[idx] === quizSection;
+                if (remaining > 0) {
+                  if (stillHere) feedback.textContent = 'Belum tepat. Pelajari lagi materinya — kembali otomatis dalam ' + remaining + 's…';
+                } else {
+                  clearTimer();
+                  resetQuiz();
+                  if (stillHere) goToId('intro-' + topic.id);
+                }
+              }, 1000);
+            }
+          });
+        });
+      });
+
+      // ---------- navigation with quiz gate ----------
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const dotsWrap = document.getElementById('dots');
+      const curNum = document.getElementById('curNum');
+      const totNum = document.getElementById('totNum');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const mobileProgress = document.getElementById('mobileProgress');
+      let idx = 0;
+      totNum.textContent = slides.length;
+      slides[0].classList.add('active');
+
+      function canAdvance() {
+        const cur = slides[idx];
+        if (cur.classList.contains('qc-slide') && !cur.classList.contains('passed')) return false;
+        return true;
+      }
+
+      function canJumpTo(targetIdx) {
+        if (targetIdx <= idx) return true;
+        for (let j = 0; j < targetIdx; j++) {
+          if (slides[j].classList.contains('qc-slide') && !slides[j].classList.contains('passed')) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      slides.forEach(function (_, i) {
+        const d = document.createElement('button');
+        d.className = 'dot' + (i === 0 ? ' on' : '');
+        d.title = 'Slide ' + (i + 1);
+        d.addEventListener('click', function () {
+          if (!canJumpTo(i)) { shake(); return; }
+          goTo(i);
+        });
+        dotsWrap.appendChild(d);
+      });
+      const dots = Array.from(dotsWrap.children);
+
+      function updateNextState() {
+        const cur = slides[idx];
+        const blocked = cur.classList.contains('qc-slide') && !cur.classList.contains('passed');
+        nextBtn.classList.toggle('locked', blocked);
+        if (blocked) {
+          nextBtn.textContent = 'Jawab dengan benar untuk lanjut';
+        } else {
+          nextBtn.innerHTML = 'Berikutnya<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left:6px; vertical-align:-1px;"><polyline points="9 18 15 12 9 6"/></svg>';
+        }
+      }
+      function shake() {
+        nextBtn.classList.add('shake');
+        setTimeout(function () { nextBtn.classList.remove('shake'); }, 350);
+      }
+      function goTo(i) {
+        if (i < 0 || i >= slides.length) return;
+        slides[idx].classList.remove('active'); dots[idx].classList.remove('on');
+        idx = i;
+        slides[idx].classList.add('active'); dots[idx].classList.add('on');
+        curNum.textContent = idx + 1;
+        if (mobileProgress) mobileProgress.textContent = 'Slide ' + (idx + 1) + ' / ' + slides.length;
+        prevBtn.disabled = idx === 0;
+        updateNextState();
+      }
+      function goToId(id) {
+        const target = document.getElementById(id);
+        const i = slides.indexOf(target);
+        if (i >= 0) goTo(i);
+      }
+      prevBtn.addEventListener('click', function () { goTo(idx - 1); });
+      nextBtn.addEventListener('click', function () { if (canAdvance()) goTo(idx + 1); else shake(); });
+      prevBtn.disabled = true;
+      updateNextState();
+
+      // Keyboard navigation (ignoring interactive input sliders)
+      document.addEventListener('keydown', function (e) {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+          if (e.key === ' ') e.preventDefault();
+          if (canAdvance()) goTo(idx + 1); else shake();
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          goTo(idx - 1);
+        }
+        if (e.key === 'f' || e.key === 'F') {
+          toggleFullscreen();
+        }
+      });
+
+      // Touch Swipe for mobile & tablet
+      let touchStartX = 0;
+      let touchStartY = 0;
+      document.addEventListener('touchstart', function (e) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+      document.addEventListener('touchend', function (e) {
+        const diffX = e.changedTouches[0].screenX - touchStartX;
+        const diffY = e.changedTouches[0].screenY - touchStartY;
+        if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+          if (diffX < 0) {
+            if (canAdvance()) goTo(idx + 1); else shake();
+          } else {
+            goTo(idx - 1);
+          }
+        }
+      }, { passive: true });
+
+      // Fullscreen presentation mode
+      const fsToggle = document.getElementById('fsToggle');
+      const fsEnterIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>Layar Penuh</span>';
+      const fsExitIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg><span>Keluar Penuh</span>';
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(function () { });
+          if (fsToggle) fsToggle.innerHTML = fsExitIcon;
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen().catch(function () { });
+          if (fsToggle) fsToggle.innerHTML = fsEnterIcon;
+        }
+      }
+      if (fsToggle) {
+        fsToggle.addEventListener('click', toggleFullscreen);
+        document.addEventListener('fullscreenchange', function () {
+          fsToggle.innerHTML = document.fullscreenElement ? fsExitIcon : fsEnterIcon;
+        });
+      }
+    })();
+  </script>
+</body>
+
+</html>
