@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Modul Kuliah Interaktif Minggu 4: Dasar-Dasar JavaScript — Variables, Data Types, Truthy/Falsy, Coercion, Template Literals, Operators, Scope, Conditionals, Loops, Functions, Arrays, Objects, dan Script Placement.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0E2438;
+      --panel: #123253;
+      --panel-2: #1B3E60;
+      --surface: #1B3E60;
+      --line: #3C6E8F;
+      --line-soft: rgba(74, 144, 184, 0.22);
+      --text: #EAF2F6;
+      --muted: #8FB2C8;
+      --amber: #F2A93B;
+      --coral: #E8654A;
+      --mint: #5FC7A3;
+      --on-text: #0E2438;
+      --radius: 10px;
+    }
+
+    html.light-theme {
+      --bg: #F6F8FA;
+      --panel: #EAF0F5;
+      --panel-2: #DCE6EE;
+      --surface: #FFFFFF;
+      --line: #B7C9D6;
+      --line-soft: rgba(60, 110, 143, 0.18);
+      --text: #132A3E;
+      --muted: #5D7A91;
+      --amber: #B8690A;
+      --coral: #B23A26;
+      --mint: #1F7A5C;
+      --on-text: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      overflow: hidden;
+      transition: background .2s ease, color .2s ease;
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      opacity: .6;
+      z-index: 0;
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 36px;
+      border-bottom: 1px solid var(--line-soft);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .topbar .crumb b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--panel-2);
+    }
+
+    .slides {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 40px 60px 30px;
+      display: none;
+      flex-direction: column;
+      justify-content: safe center;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    h1.headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      margin: 0 0 14px;
+      max-width: 16ch;
+      color: var(--text);
+    }
+
+    h2.sub {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: clamp(19px, 2.2vw, 26px);
+      margin: 0 0 16px;
+      color: var(--text);
+    }
+
+    p.lede {
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--muted);
+      max-width: 68ch;
+      margin: 0 0 14px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 16px;
+      width: fit-content;
+      background: color-mix(in srgb, var(--amber) 12%, transparent);
+      color: var(--amber);
+      border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
+    }
+
+    .tag-mint {
+      background: color-mix(in srgb, var(--mint) 12%, transparent);
+      color: var(--mint);
+      border-color: color-mix(in srgb, var(--mint) 40%, transparent);
+    }
+
+    .tag-coral {
+      background: color-mix(in srgb, var(--coral) 10%, transparent);
+      color: var(--coral);
+      border-color: color-mix(in srgb, var(--coral) 35%, transparent);
+    }
+
+    .tag-muted {
+      background: transparent;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 36px;
+      border-top: 1px solid var(--line-soft);
+      flex-shrink: 0;
+    }
+
+    .navbtn {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .navbtn:hover {
+      background: var(--panel-2);
+    }
+
+    .navbtn:disabled {
+      opacity: .35;
+      cursor: default;
+    }
+
+    .navbtn.locked {
+      opacity: .7;
+    }
+
+    .navbtn.shake {
+      animation: shake .35s ease;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translateX(-1px); }
+      20%, 80% { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+
+    .navbtn:focus-visible,
+    button:focus-visible,
+    .choice:focus-visible,
+    .qc-option:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      max-width: 44vw;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--line);
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: all .2s ease;
+    }
+
+    .dot.on {
+      background: var(--amber);
+      width: 16px;
+      border-radius: 4px;
+    }
+
+    .dot.passed-dot {
+      background: var(--mint);
+    }
+
+    .mobile-nav-label {
+      display: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .row {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+    }
+
+    code,
+    .mono-code,
+    p code,
+    li code,
+    span.mono:not(.range-val) {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.88em;
+      background: color-mix(in srgb, var(--amber) 15%, var(--panel));
+      color: var(--amber);
+      border: 1px solid color-mix(in srgb, var(--amber) 34%, transparent);
+      padding: 1.5px 6.5px;
+      border-radius: 5px;
+      font-weight: 500;
+      letter-spacing: -0.2px;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1.3;
+      margin: 0 1.5px;
+    }
+
+    pre code,
+    pre.snippet code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+      font-weight: normal;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .two-col-gap {
+      display: flex;
+      gap: 44px;
+      flex-wrap: wrap;
+    }
+
+    .cpmk {
+      margin-top: 24px;
+      display: flex;
+      gap: 26px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .cpmk b {
+      color: var(--mint);
+      display: block;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .credit-line {
+      margin-top: 26px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .credit-line b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .agenda-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0 36px;
+    }
+
+    .agenda-list li {
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .agenda-list .num {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--amber);
+      font-size: 13px;
+      width: 22px;
+    }
+
+    .agenda-list .txt {
+      font-size: 14px;
+    }
+
+    .agenda-list .txt small {
+      display: block;
+      color: var(--muted);
+      font-size: 11.5px;
+      margin-top: 1px;
+    }
+
+    .intro-layout {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .intro-text {
+      flex: 1.35;
+      min-width: 300px;
+    }
+
+    .intro-visual {
+      flex: 1;
+      min-width: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-visual svg {
+      width: 100%;
+      max-width: 230px;
+      height: auto;
+    }
+
+    .key-points {
+      list-style: none;
+      margin: 14px 0 0;
+      padding: 0;
+      max-width: 66ch;
+    }
+
+    .key-points li {
+      position: relative;
+      padding: 4px 0 4px 18px;
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .key-points li:before {
+      content: "–";
+      position: absolute;
+      left: 0;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .ic-amber {
+      stroke: var(--amber);
+      fill: none;
+    }
+
+    .ic-coral {
+      stroke: var(--coral);
+      fill: none;
+    }
+
+    .ic-mint {
+      stroke: var(--mint);
+      fill: none;
+    }
+
+    .ic-line {
+      stroke: var(--line);
+      fill: none;
+    }
+
+    .ic-fill-amber {
+      fill: var(--amber);
+    }
+
+    .ic-fill-coral {
+      fill: var(--coral);
+    }
+
+    .ic-fill-mint {
+      fill: var(--mint);
+    }
+
+    .ic-fill-soft {
+      fill: var(--surface);
+      stroke: var(--line);
+    }
+
+    .ic-text {
+      fill: var(--text);
+      stroke: var(--text);
+    }
+
+    .ic-muted {
+      fill: var(--muted);
+      stroke: none;
+    }
+
+    .ic-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+
+    .control-group label {
+      display: block;
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .choice {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 12px;
+      padding: 6px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Mono';
+      transition: all .15s ease;
+    }
+
+    .choice.on {
+      background: var(--amber);
+      color: var(--on-text);
+      border-color: var(--amber);
+      font-weight: 500;
+    }
+
+    .example-layout {
+      display: grid;
+      grid-template-columns: 210px 1fr 1fr;
+      gap: 22px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .example-col-label {
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .ex-controls {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-panel {
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'IBM Plex Mono';
+      font-size: 12.5px;
+      line-height: 1.8;
+      overflow: auto;
+      height: calc(100% - 24px);
+    }
+
+    .cs-block {
+      margin-bottom: 10px;
+    }
+
+    .cs-sel {
+      color: #EAF2F6;
+    }
+
+    .cs-line {
+      padding-left: 0;
+    }
+
+    .cs-line.cs-hl {
+      background: rgba(242, 169, 59, 0.18);
+      border-radius: 4px;
+      margin: 0 -6px;
+      padding: 2px 6px;
+    }
+
+    .cs-kw {
+      color: #7FD9BB;
+    }
+
+    .cs-val {
+      color: #F2B25E;
+    }
+
+    .cs-com {
+      color: #6C8AA1;
+      font-style: italic;
+    }
+
+    .cs-fn {
+      color: #8FC7FF;
+    }
+
+    .console-line {
+      padding: 2px 0;
+      white-space: pre-wrap;
+    }
+
+    .console-line:before {
+      content: "› ";
+      color: #4F7089;
+    }
+
+    .console-out {
+      color: #EAF2F6;
+    }
+
+    .console-error {
+      color: #FF8A75;
+    }
+
+    .console-error:before {
+      content: "✕ ";
+      color: #FF8A75;
+    }
+
+    .console-value {
+      color: #F2B25E;
+    }
+
+    .console-good {
+      color: #7FD9BB;
+    }
+
+    .ex-result {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      height: calc(100% - 24px);
+    }
+
+    @media (max-width:900px) {
+      .example-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .code-panel {
+        height: auto;
+      }
+    }
+
+    .pattern-card {
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--panel);
+    }
+
+    .pattern-title {
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      color: var(--mint);
+      margin-bottom: 10px;
+    }
+
+    pre.snippet {
+      margin: 10px 0 0;
+      white-space: pre-wrap;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--panel-2);
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+
+    .challenge-mock {
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'IBM Plex Mono';
+      font-size: 12.5px;
+      color: #EAF2F6;
+      line-height: 1.7;
+    }
+
+    /* Step by Step Guide Card for Challenge */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .step-card {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .step-num {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--amber);
+      background: color-mix(in srgb, var(--amber) 15%, transparent);
+      border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+      padding: 1.5px 7px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+
+    .step-card h3 {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .step-card p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .checklist {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .checklist li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 6px 0;
+      font-size: 14px;
+    }
+
+    .checklist li:before {
+      content: "-";
+      color: var(--amber);
+      font-family: 'IBM Plex Mono';
+      font-weight: 600;
+    }
+
+    /* Live Calculator Demo Box */
+    .calc-tester {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .calc-inputs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .calc-input {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono';
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      width: 80px;
+    }
+
+    .calc-select {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--amber);
+      font-family: 'IBM Plex Mono';
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .calc-btn {
+      background: var(--amber);
+      color: var(--on-text);
+      border: none;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity .15s ease;
+    }
+
+    .calc-btn:hover {
+      opacity: .9;
+    }
+
+    .calc-out-box {
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+    }
+
+    .qc-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 600px;
+    }
+
+    .qc-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans';
+      font-size: 15px;
+      transition: background .15s ease, border-color .15s ease;
+    }
+
+    .qc-option:hover {
+      background: var(--panel-2);
+    }
+
+    .qc-option.correct {
+      background: color-mix(in srgb, var(--mint) 15%, transparent);
+      border-color: var(--mint);
+    }
+
+    .qc-option.wrong {
+      background: color-mix(in srgb, var(--coral) 15%, transparent);
+      border-color: var(--coral);
+    }
+
+    .qc-option.locked {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .qc-feedback {
+      margin-top: 16px;
+      font-size: 14px;
+      min-height: 20px;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .qc-feedback.good {
+      color: var(--mint);
+    }
+
+    .qc-feedback.bad {
+      color: var(--coral);
+    }
+
+    @media (max-width:760px) {
+      .slide {
+        padding: 24px 18px 18px;
+        justify-content: flex-start;
+      }
+
+      .topbar,
+      .navbar {
+        padding: 12px 16px;
+      }
+
+      .topbar .crumb {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 48vw;
+      }
+
+      .row,
+      .two-col-gap {
+        gap: 16px;
+      }
+
+      .dots {
+        display: none;
+      }
+
+      .mobile-nav-label {
+        display: block;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="ic-text" />
+      </marker>
+      <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-opacity="0.18" />
+      </filter>
+    </defs>
+  </svg>
+  <div class="grid-bg"></div>
+  <div class="deck">
+    <div class="topbar">
+      <div class="crumb">Pemrograman Web · ET234305 — <b>Minggu 4: Dasar-Dasar JavaScript</b></div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="fsToggle" title="Mode Layar Penuh (F)"><svg width="13" height="13"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+          </svg><span>Layar Penuh</span></button>
+        <button class="theme-toggle" id="themeToggle"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg><span>Light</span></button>
+        <div class="counter"><span id="curNum">1</span> / <span id="totNum">1</span></div>
+      </div>
+    </div>
+    <div class="slides" id="slides"></div>
+    <div class="navbar">
+      <button class="navbtn" id="prevBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          style="margin-right:6px; vertical-align:-1px;">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>Sebelumnya</button>
+      <div class="dots" id="dots"></div>
+      <div class="mobile-nav-label" id="mobileProgress">Slide 1 / 48</div>
+      <button class="navbtn" id="nextBtn">Berikutnya<svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          style="margin-left:6px; vertical-align:-1px;">
+          <polyline points="9 18 15 12 9 6" />
+        </svg></button>
+    </div>
+  </div>
+
+<script>
+(function(){
+
+  function raw(html, hl){
+    return '<div class="cs-line'+(hl?' cs-hl':'')+'">'+html+'</div>';
+  }
+  function comment(text){
+    return '<div class="cs-line"><span class="cs-com">// '+text+'</span></div>';
+  }
+  function codeBlock(lines){
+    return '<div class="cs-block">'+lines.join('')+'</div>';
+  }
+  function out(html, cls){
+    return '<div class="console-line'+(cls?(' '+cls):'')+'">'+html+'</div>';
+  }
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+
+  const titleHTML = '\
+  <section class="slide">\
+    <div class="tag">Sesi Penyampaian · Modul 2</div>\
+    <h1 class="headline">Dasar-Dasar JavaScript</h1>\
+    <p class="lede">Dari sekadar mengubah tampilan (CSS) ke membuat halaman web benar-benar "berpikir": variabel, tipe data, logika, dan fungsi — fondasi dari semua interaktivitas yang akan kalian bangun sisa semester ini.</p>\
+    <div class="cpmk">\
+      <div><b>Sub-CPMK</b>Mahasiswa mampu menjelaskan dan menerapkan konsep dasar JavaScript</div>\
+      <div><b>Terkait CPMK</b>CPMK-1 (10%)</div>\
+      <div><b>Prasyarat</b>HTML &amp; CSS (Minggu 1–3)</div>\
+    </div>\
+    <div class="credit-line">Instructor: <b>Fuad Dary Rosyadi</b> &nbsp;·&nbsp; Compiled by Anthropic Claude</div>\
+  </section>';
+
+  const agendaHTML = '\
+  <section class="slide">\
+    <h2 class="sub">Peta sesi hari ini · ~180 menit</h2>\
+    <ol class="agenda-list">\
+      <li><span class="num">01</span><span class="txt">Variables: let, const, var<small>Scope &amp; mutability — 12 menit</small></span></li>\
+      <li><span class="num">02</span><span class="txt">Data Types &amp; typeof<small>Primitives dan quirks-nya — 10 menit</small></span></li>\
+      <li><span class="num">03</span><span class="txt">Truthy &amp; Falsy Values<small>Identitas boolean tersembunyi — 10 menit</small></span></li>\
+      <li><span class="num">04</span><span class="txt">Type Coercion &amp; Conversion<small>Implisit vs eksplisit — 10 menit</small></span></li>\
+      <li><span class="num">05</span><span class="txt">Template Literals<small>String modern dengan `${}` — 8 menit</small></span></li>\
+      <li><span class="num">06</span><span class="txt">Operators &amp; Comparison<small>== vs === — 10 menit</small></span></li>\
+      <li><span class="num">07</span><span class="txt">Scope: Global, Function, Block<small>Ke mana variabel "terlihat" — 12 menit</small></span></li>\
+      <li><span class="num">08</span><span class="txt">Conditionals<small>if/else, ternary — 10 menit</small></span></li>\
+      <li><span class="num">09</span><span class="txt">Loops<small>for, while, for...of — 12 menit</small></span></li>\
+      <li><span class="num">10</span><span class="txt">Functions<small>Declaration vs arrow, default params — 12 menit</small></span></li>\
+      <li><span class="num">11</span><span class="txt">Arrays (Dasar)<small>push, pop, includes, length — 10 menit</small></span></li>\
+      <li><span class="num">12</span><span class="txt">Array Methods<small>forEach, map, filter — 12 menit</small></span></li>\
+      <li><span class="num">13</span><span class="txt">Objects (Dasar)<small>Dot vs bracket notation — 10 menit</small></span></li>\
+      <li><span class="num">14</span><span class="txt">Inline vs External Script<small>Menyisipkan JS ke HTML — 8 menit</small></span></li>\
+      <li><span class="num">15</span><span class="txt">Script Placement<small>head, bottom, defer — 12 menit</small></span></li>\
+    </ol>\
+    <p class="footer-note">Tiap sub-materi: penjelasan → contoh interaktif (kontrol / kode / console output) → cek pemahaman. Jawaban keliru tidak langsung diberi tahu yang benar — kalian akan dikembalikan ke materinya dulu untuk dipelajari ulang. Materinya cukup padat (~180 menit, melebihi alokasi TM 150 menit/minggu) — pertimbangkan dipecah jadi dua sesi Penyampaian.</p>\
+  </section>';
+
+  const consolePatternsHTML = '\
+  <section class="slide">\
+    <h2 class="sub">console — teman terbaik saat debugging</h2>\
+    <p class="lede">Sebelum lanjut, biasakan diri dengan tab Console di DevTools browser (klik kanan → Inspect → Console). Ini yang akan kalian pakai untuk melihat semua contoh di slide-slide berikutnya.</p>\
+    <div class="two-col-gap">\
+      <div class="pattern-card" style="flex:1; min-width:260px;">\
+        <div class="pattern-title">console.log() — output biasa</div>\
+        <pre class="snippet" style="margin:0;">console.log("Halo dunia");\n// → Halo dunia</pre>\
+      </div>\
+      <div class="pattern-card" style="flex:1; min-width:260px;">\
+        <div class="pattern-title">console.error() / console.warn()</div>\
+        <pre class="snippet" style="margin:0;">console.error("Ada yang salah!");\nconsole.warn("Hati-hati…");</pre>\
+      </div>\
+      <div class="pattern-card" style="flex:1; min-width:260px;">\
+        <div class="pattern-title">console.table() — untuk array/object</div>\
+        <pre class="snippet" style="margin:0;">console.table([\n  {nama:"Rani", nilai:90}\n]);</pre>\
+      </div>\
+    </div>\
+  </section>';
+
+  const enrichmentHTML = '\
+  <section class="slide">\
+    <div class="tag tag-muted">Pengayaan mandiri — di luar penilaian inti</div>\
+    <h2 class="sub">Sekilas: Optional Chaining &amp; Nullish Coalescing</h2>\
+    <p class="lede">Dua fitur modern JavaScript (ES2020+) yang akan sering kalian lihat di kode orang lain, meski bukan materi wajib minggu ini.</p>\
+    <div class="row">\
+      <div class="col panel">\
+        <div class="pattern-title" style="margin-bottom:8px;">Optional chaining (?.)</div>\
+        <pre class="snippet" style="margin:0;">const kota = user?.alamat?.kota;\n// tidak error walau alamat undefined</pre>\
+      </div>\
+      <div class="col panel">\
+        <div class="pattern-title" style="margin-bottom:8px;">Nullish coalescing (??)</div>\
+        <pre class="snippet" style="margin:0;">const nama = input ?? "Anonim";\n// dipakai hanya jika input null/undefined\n// (beda dari || yang juga memicu ke 0 atau "")</pre>\
+      </div>\
+    </div>\
+  </section>';
+
+  const challengeHTML = '\
+  <section class="slide">\
+    <div class="tag tag-coral">Code Challenge — dikerjakan di Praktikum · AI DILARANG untuk tantangan ini</div>\
+    <h2 class="sub">Kalkulator Sederhana</h2>\
+    <p class="lede" style="margin-bottom:6px;"><b style="color:var(--coral);">Berbeda dari kebijakan AI course secara umum</b> — tantangan ini wajib dikerjakan <b>tanpa bantuan AI apa pun</b> (ChatGPT, Copilot, dll.), termasuk untuk debugging. Tujuannya menguji pemahaman murni kalian atas variables, operators, conditionals, dan functions sebelum masuk ke DOM minggu depan. Kejujuran di sini akan dicek lewat sesi lisan singkat saat Asistensi.</p>\
+    <div class="row" style="align-items:flex-start;">\
+      <div class="col" style="flex:1; min-width:300px;">\
+        <div class="challenge-mock"><span class="cs-kw">function</span> <span class="cs-fn">kalkulator</span>(a, b, operator) {<br>&nbsp;&nbsp;<span class="cs-com">// 1. Validasi kasus khusus pembagian dengan 0</span><br>&nbsp;&nbsp;<span class="cs-kw">if</span> (operator === <span class="cs-val">"/"</span> &amp;&amp; b === <span class="cs-val">0</span>) {<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs-kw">return</span> <span class="cs-val">"Error: Pembagian dengan 0 tidak diperbolehkan!"</span>;<br>&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;<span class="cs-com">// 2. Logika operasi: if/else if atau switch</span><br>&nbsp;&nbsp;<span class="cs-kw">if</span> (operator === <span class="cs-val">"+"</span>) <span class="cs-kw">return</span> a + b;<br>&nbsp;&nbsp;<span class="cs-kw">else if</span> (operator === <span class="cs-val">"-"</span>) <span class="cs-kw">return</span> a - b;<br>&nbsp;&nbsp;<span class="cs-kw">else if</span> (operator === <span class="cs-val">"*"</span>) <span class="cs-kw">return</span> a * b;<br>&nbsp;&nbsp;<span class="cs-kw">else if</span> (operator === <span class="cs-val">"/"</span>) <span class="cs-kw">return</span> a / b;<br>&nbsp;&nbsp;<span class="cs-kw">else return</span> <span class="cs-val">"Error: Operator tidak valid"</span>;<br>}</div>\
+        <div class="calc-tester">\
+          <div style="font-family:\'IBM Plex Mono\'; font-size:11.5px; color:var(--mint); font-weight:600;">⚡ Live Interactive Calculator Simulator</div>\
+          <div class="calc-inputs">\
+            <input type="number" id="calcA" class="calc-input" value="10" placeholder="a">\
+            <select id="calcOp" class="calc-select">\
+              <option value="+">+</option>\
+              <option value="-">-</option>\
+              <option value="*">*</option>\
+              <option value="/" selected>/</option>\
+            </select>\
+            <input type="number" id="calcB" class="calc-input" value="0" placeholder="b">\
+            <button id="calcRunBtn" class="calc-btn">Uji Fungsi</button>\
+          </div>\
+          <div class="calc-out-box" id="calcOut"><span style="color:#FF8A75;">✕ Error: Pembagian dengan 0 tidak diperbolehkan!</span></div>\
+        </div>\
+      </div>\
+      <div class="col" style="flex:1.1; min-width:300px;">\
+        <div class="steps-grid">\
+          <div class="step-card">\
+            <span class="step-num">Langkah 1</span>\
+            <h3>Struktur Fungsi</h3>\
+            <p>Deklarasikan fungsi <code>kalkulator(a, b, operator)</code> dengan parameter dua angka dan satu string operator.</p>\
+          </div>\
+          <div class="step-card">\
+            <span class="step-num">Langkah 2</span>\
+            <h3>Percabangan Logika</h3>\
+            <p>Gunakan <code>if/else if</code> atau <code>switch (operator)</code> untuk mengeksekusi operasi aritmatika sesuai simbol.</p>\
+          </div>\
+          <div class="step-card">\
+            <span class="step-num">Langkah 3</span>\
+            <h3>Penanganan Kasus Khusus</h3>\
+            <p>Cegah nilai <code>Infinity</code> dengan me-return string pesan error jelas saat pembagian dengan angka <code>0</code>.</p>\
+          </div>\
+          <div class="step-card">\
+            <span class="step-num">Langkah 4</span>\
+            <h3>Modul Eksternal &amp; Pengujian</h3>\
+            <p>Pisahkan ke <code>kalkulator.js</code>, sambungkan via <code>&lt;script src="..." defer&gt;</code>, dan uji minimal 5 kombinasi via <code>console.log()</code>.</p>\
+          </div>\
+        </div>\
+      </div>\
+    </div>\
+  </section>';
+
+  const closingHTML = '\
+  <section class="slide">\
+    <h2 class="sub">Deklarasi AI &amp; langkah berikutnya</h2>\
+    <div class="row">\
+      <div class="col panel"><p style="margin-top:0;">Jika kalian memakai AI (ChatGPT, Copilot, dll.) saat mengerjakan code challenge, sertakan <b>log prompt</b> singkat bersama submission — bukan untuk dilarang, tapi untuk dipertanggungjawabkan.</p></div>\
+      <div class="col panel"><p style="margin-top:0;"><b>Siklus 3 minggu:</b> Penyampaian (hari ini) → Asistensi (tanya-jawab &amp; progress check) → Praktikum/Evaluasi.</p></div>\
+    </div>\
+    <p class="footer-note">Minggu depan: DOM Manipulation lanjutan — memakai teknik menghubungkan script hari ini (src, defer) untuk benar-benar memanipulasi elemen (querySelector, addEventListener, mengubah konten) secara interaktif.</p>\
+  </section>';
+
+  // ---------- icons ----------
+  const T = '<text class="ic-muted ic-label" text-anchor="middle"';
+  const icons = {
+    variables:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="10" y="20" width="46" height="40" rx="6" stroke-width="1.5" filter="url(#softShadow)"/>'+T+' x="33" y="44">let</text>'
+      +'<path class="ic-muted" d="M20 30 L26 24 M20 30 L26 36" stroke="currentColor" stroke-width="1.3" fill="none"/>'
+      +'<rect class="ic-fill-amber" x="62" y="20" width="46" height="40" rx="6" opacity="0.3" stroke-width="1.5" filter="url(#softShadow)"/>'+T+' x="85" y="44" fill="var(--amber)">const</text>'
+      +'<rect class="ic-muted" x="96" y="26" width="8" height="8" rx="1" fill="currentColor"/>'
+      +'<rect class="ic-fill-soft" x="114" y="20" width="46" height="40" rx="6" stroke-width="1.5" stroke-dasharray="3 3" filter="url(#softShadow)"/>'+T+' x="137" y="44">var</text>'
+      +T+' x="85" y="90" style="font-size:10px;">mutable vs immutable</text>'
+      +'</svg>',
+    datatypes:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-amber" x="10" y="14" width="44" height="30" rx="5" opacity="0.3" stroke-width="1.5"/>'+T+' x="32" y="34" fill="var(--amber)">42</text>'
+      +'<rect class="ic-fill-mint" x="64" y="14" width="50" height="30" rx="5" opacity="0.3" stroke-width="1.5"/>'+T+' x="89" y="34" fill="var(--mint)">"abc"</text>'
+      +'<rect class="ic-fill-coral" x="124" y="14" width="42" height="30" rx="5" opacity="0.3" stroke-width="1.5"/>'+T+' x="145" y="34" fill="var(--coral)">true</text>'
+      +'<rect class="ic-line" x="10" y="56" width="60" height="30" rx="5" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>'+T+' x="40" y="76">undefined</text>'
+      +'<rect class="ic-line" x="80" y="56" width="50" height="30" rx="5" stroke-width="1.5" fill="none"/>'+T+' x="105" y="76">null</text>'
+      +T+' x="85" y="112" style="font-size:10px;">typeof x</text>'
+      +'</svg>',
+    truthyfalsy:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-line" x="35" y="55" width="100" height="40" rx="20" stroke-width="2" fill="none"/>'
+      +'<circle class="ic-fill-mint" cx="115" cy="75" r="16" filter="url(#softShadow)"/>'
+      +'<path class="ic-text" d="M108 75 l5 5 l10 -10" stroke-width="2" fill="none" stroke="var(--on-text)"/>'
+      +T+' x="55" y="35" fill="var(--mint)">Truthy</text>'+T+' x="115" y="35" fill="var(--coral)">Falsy</text>'
+      +T+' x="85" y="120" style="font-size:10px;">0, "", null, undefined, NaN, false</text>'
+      +'</svg>',
+    coercion:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-mint" x="10" y="30" width="50" height="34" rx="6" opacity="0.3" stroke-width="1.5" filter="url(#softShadow)"/>'+T+' x="35" y="51" fill="var(--mint)">"5"</text>'
+      +'<path class="ic-amber" d="M66 47 H104" stroke-width="2" marker-end="url(#arrow)"/>'+T+' x="85" y="38" fill="var(--amber)" style="font-size:9px;">Number()</text>'
+      +'<rect class="ic-fill-amber" x="110" y="30" width="50" height="34" rx="6" opacity="0.3" stroke-width="1.5" filter="url(#softShadow)"/>'+T+' x="135" y="51" fill="var(--amber)">5</text>'
+      +T+' x="85" y="100" style="font-size:10px;">implicit: "5"+3 → "53"</text>'
+      +T+' x="85" y="116" style="font-size:10px;">implicit: "5"-3 → 2</text>'
+      +'</svg>',
+    templateliterals:'<svg viewBox="0 0 170 150">'
+      +'<path class="ic-fill-soft" d="M20 20 h130 a8 8 0 0 1 8 8 v54 a8 8 0 0 1 -8 8 h-90 l-18 20 v-20 h-22 a8 8 0 0 1 -8 -8 v-54 a8 8 0 0 1 8 -8 z" stroke-width="1.5" filter="url(#softShadow)"/>'
+      +T+' x="85" y="48" style="font-size:11px;">Halo, </text>'
+      +'<rect class="ic-fill-amber" x="95" y="38" width="48" height="18" rx="4" opacity="0.35"/>'+T+' x="119" y="51" fill="var(--amber)" style="font-size:10px;">${nama}</text>'
+      +T+' x="85" y="70" style="font-size:11px;">!</text>'
+      +'</svg>',
+    operators:'<svg viewBox="0 0 170 150">'
+      +'<line class="ic-line" x1="85" y1="20" x2="85" y2="54" stroke-width="2"/>'
+      +'<line class="ic-line" x1="30" y1="54" x2="140" y2="54" stroke-width="2"/>'
+      +'<line class="ic-line" x1="30" y1="54" x2="20" y2="86" stroke-width="1.5"/><line class="ic-line" x1="30" y1="54" x2="40" y2="86" stroke-width="1.5"/>'
+      +'<line class="ic-line" x1="140" y1="54" x2="130" y2="86" stroke-width="1.5"/><line class="ic-line" x1="140" y1="54" x2="150" y2="86" stroke-width="1.5"/>'
+      +'<path class="ic-line" d="M12 86 Q30 100 48 86" stroke-width="1.5" fill="none"/><path class="ic-line" d="M122 86 Q140 100 158 86" stroke-width="1.5" fill="none"/>'
+      +T+' x="30" y="112" fill="var(--amber)">5</text>'+T+' x="140" y="112" fill="var(--mint)">"5"</text>'
+      +T+' x="85" y="16" style="font-size:11px;">== vs ===</text>'
+      +'</svg>',
+    scope:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-amber" x="10" y="10" width="150" height="130" rx="8" stroke-width="1.8"/>'+T+' x="85" y="26" fill="var(--amber)">global</text>'
+      +'<rect class="ic-coral" x="28" y="36" width="114" height="90" rx="6" stroke-width="1.8"/>'+T+' x="85" y="52" fill="var(--coral)">function</text>'
+      +'<rect class="ic-mint" x="46" y="62" width="78" height="50" rx="5" stroke-width="1.8"/>'+T+' x="85" y="90" fill="var(--mint)">block { }</text>'
+      +'</svg>',
+    conditionals:'<svg viewBox="0 0 170 150">'
+      +'<path class="ic-fill-amber" d="M85 14 L118 44 L85 74 L52 44 Z" opacity="0.3" stroke-width="1.5"/>'+T+' x="85" y="48" fill="var(--amber)" style="font-size:10px;">nilai ≥ 75?</text>'
+      +'<path class="ic-mint" d="M85 74 L50 116" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>'+T+' x="40" y="132" fill="var(--mint)">true → Lulus</text>'
+      +'<path class="ic-coral" d="M85 74 L120 116" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>'+T+' x="130" y="132" fill="var(--coral)">false → Gagal</text>'
+      +'</svg>',
+    loops:'<svg viewBox="0 0 170 150">'
+      +'<circle class="ic-line" cx="85" cy="70" r="46" stroke-width="2" fill="none" stroke-dasharray="6 5"/>'
+      +'<path class="ic-amber" d="M85 24 L94 14 M85 24 L94 32" stroke-width="1.8" fill="none"/>'
+      +T+' x="85" y="66" fill="var(--amber)" style="font-size:13px; font-weight:600;">i++</text>'
+      +T+' x="85" y="84">for (i=0; i&lt;n; i++)</text>'
+      +'</svg>',
+    functions:'<svg viewBox="0 0 170 150">'
+      +'<path class="ic-mint" d="M10 70 H46" stroke-width="2" marker-end="url(#arrow)"/>'+T+' x="28" y="58" fill="var(--mint)">in</text>'
+      +'<rect class="ic-fill-amber" x="54" y="40" width="62" height="60" rx="8" opacity="0.28" stroke-width="1.8" filter="url(#softShadow)"/>'+T+' x="85" y="74" fill="var(--amber)" style="font-size:11px;">f(x)</text>'
+      +'<path class="ic-coral" d="M124 70 H160" stroke-width="2" marker-end="url(#arrow)"/>'+T+' x="142" y="58" fill="var(--coral)">out</text>'
+      +'</svg>',
+    arrays:'<svg viewBox="0 0 170 150">'
+      +[0,1,2,3].map(function(i){return '<rect class="ic-fill-soft" x="'+(10+i*38)+'" y="40" width="32" height="40" rx="4" stroke-width="1.5" filter="url(#softShadow)"/>'+T+' x="'+(26+i*38)+'" y="98" style="font-size:9px;">'+i+'</text>';}).join('')
+      +T+' x="85" y="20" style="font-size:11px;">arr[i]</text>'
+      +'</svg>',
+    arraymethods:'<svg viewBox="0 0 170 150">'
+      +[0,1,2].map(function(i){return '<rect class="ic-fill-soft" x="'+(10+i*30)+'" y="20" width="24" height="24" rx="4" stroke-width="1.3"/>';}).join('')
+      +'<path class="ic-amber" d="M50 70 L120 70" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/>'
+      +'<path class="ic-fill-amber" d="M85 50 L100 70 L85 90 L70 70 Z" opacity="0.3" stroke-width="1.5"/>'+T+' x="85" y="74" fill="var(--amber)" style="font-size:9px;">map/filter</text>'
+      +[0,1].map(function(i){return '<rect class="ic-fill-mint" x="'+(65+i*30)+'" y="106" width="24" height="24" rx="4" opacity="0.3" stroke-width="1.3"/>';}).join('')
+      +'</svg>',
+    objects:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="20" y="14" width="130" height="112" rx="8" stroke-width="1.8" filter="url(#softShadow)"/>'
+      +T+' x="85" y="40" fill="var(--mint)">nama: "Rani"</text>'
+      +T+' x="85" y="64" fill="var(--amber)">umur: 20</text>'
+      +T+' x="85" y="88" fill="var(--coral)">aktif: true</text>'
+      +'<line class="ic-line" x1="34" y1="52" x2="136" y2="52" stroke-width="1" stroke-dasharray="2 3"/>'
+      +'<line class="ic-line" x1="34" y1="76" x2="136" y2="76" stroke-width="1" stroke-dasharray="2 3"/>'
+      +'</svg>',
+    scriptembed:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="10" y="20" width="62" height="52" rx="6" stroke-width="1.5" filter="url(#softShadow)"/>'
+      +T+' x="41" y="34" style="font-size:8px;">&lt;script&gt;</text>'
+      +'<line class="ic-muted" x1="20" y1="46" x2="62" y2="46" stroke="currentColor" stroke-width="1.3"/>'
+      +'<line class="ic-muted" x1="20" y1="54" x2="54" y2="54" stroke="currentColor" stroke-width="1.3"/>'
+      +'<line class="ic-muted" x1="20" y1="62" x2="58" y2="62" stroke="currentColor" stroke-width="1.3"/>'
+      +T+' x="41" y="88" fill="var(--mint)">inline</text>'
+      +'<rect class="ic-fill-amber" x="96" y="20" width="62" height="52" rx="6" opacity="0.28" stroke-width="1.5" filter="url(#softShadow)"/>'
+      +T+' x="127" y="40" fill="var(--amber)" style="font-size:7px;">&lt;script src&gt;</text>'
+      +'<path class="ic-amber" d="M127 50 V62" stroke-width="1.6" marker-end="url(#arrow)"/>'
+      +'<path class="ic-fill-soft" d="M111 64 h32 v22 h-32 z" stroke-width="1.3"/>'
+      +T+' x="127" y="100" fill="var(--amber)">app.js</text>'
+      +'</svg>',
+    scriptplacement:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="30" y="10" width="80" height="130" rx="6" stroke-width="1.5" filter="url(#softShadow)"/>'
+      +'<line class="ic-line" x1="40" y1="30" x2="100" y2="30" stroke-width="1.3"/>'
+      +'<line class="ic-line" x1="40" y1="112" x2="100" y2="112" stroke-width="1.3"/>'
+      +'<circle class="ic-fill-coral" cx="122" cy="24" r="7"/>'+T+' x="122" y="46" fill="var(--coral)" style="font-size:8px;">head</text>'
+      +'<circle class="ic-fill-mint" cx="122" cy="118" r="7"/>'+T+' x="122" y="140" fill="var(--mint)" style="font-size:8px;">bottom</text>'
+      +'<circle class="ic-line" cx="18" cy="24" r="10" stroke-width="1.5"/>'+T+' x="18" y="28" style="font-size:9px;">⏱</text>'
+      +T+' x="18" y="46" fill="var(--amber)" style="font-size:8px;">defer</text>'
+      +'</svg>'
+  };
+
+  // ---------- topics ----------
+  const topics = [
+    {
+      id:'variables', label:'Materi 1', title:'Variables: let, const, var',
+      intro:'<p class="lede">Variabel adalah "wadah bernama" untuk menyimpan nilai. JavaScript modern menyediakan tiga cara mendeklarasikannya, dan pilihannya bukan sekadar gaya penulisan — masing-masing punya aturan main berbeda.</p><ul class="key-points"><li><code class="mono">let</code>: bisa diisi ulang (reassign), scope-nya block (terikat pada <code class="mono">{ }</code> tempat ia dideklarasikan)</li><li><code class="mono">const</code>: <b>tidak bisa</b> di-reassign setelah didefinisikan, scope block sama seperti let — pilihan default yang disarankan kecuali memang perlu berubah</li><li><code class="mono">var</code>: peninggalan JavaScript lama, scope-nya function (bukan block) dan bisa di-<i>hoist</i> — sumber bug klasik, sebaiknya dihindari di kode baru</li></ul><p class="lede">Catatan penting: <code class="mono">const</code> mencegah <em>reassignment</em>, bukan mencegah perubahan isi objek/array di dalamnya — <code class="mono">const arr = []; arr.push(1);</code> tetap valid.</p>',
+      icon:icons.variables,
+      controls:[
+        {type:'buttons', prop:'kind', label:'Jenis deklarasi', initial:'let', options:[{value:'let',label:'let'},{value:'const',label:'const'},{value:'var',label:'var'}]},
+        {type:'buttons', prop:'reassign', label:'Coba reassign?', initial:'yes', options:[{value:'no',label:'Tidak'},{value:'yes',label:'Ya'}]}
+      ],
+      codeTemplate:function(s){
+        const lines = [raw('<span class="cs-kw">'+s.kind+'</span> x = <span class="cs-val">5</span>;')];
+        if(s.reassign==='yes') lines.push(raw('x = <span class="cs-val">10</span>;'), comment('reassign'));
+        return codeBlock(lines);
+      },
+      outputTemplate:function(s){
+        if(s.reassign==='yes' && s.kind==='const'){
+          return out('Uncaught TypeError: Assignment to constant variable.', 'console-error');
+        }
+        const finalVal = s.reassign==='yes' ? '10' : '5';
+        return out('x', '') + out('<span class="console-value">'+finalVal+'</span>', 'console-good');
+      },
+      quiz:{question:'Kenapa const arr = []; arr.push(1); tetap valid, padahal arr adalah const?', explain:'const hanya mencegah arr diisi ulang dengan referensi baru (arr = [...]), bukan mencegah perubahan isi di dalam objek/array yang sudah ada.',
+        options:[{label:'const mencegah reassignment referensi, bukan perubahan isi objek/array di dalamnya', correct:true},{label:'push() adalah pengecualian khusus yang diizinkan untuk semua jenis variabel', correct:false},{label:'Array sebenarnya selalu berperilaku seperti let, bukan const', correct:false},{label:'Ini adalah bug di JavaScript yang belum diperbaiki', correct:false}]}
+    },
+    {
+      id:'datatypes', label:'Materi 2', title:'Data Types & typeof',
+      intro:'<p class="lede">JavaScript punya beberapa tipe data primitif dasar: <code class="mono">number</code>, <code class="mono">string</code>, <code class="mono">boolean</code>, <code class="mono">undefined</code>, dan <code class="mono">null</code> — plus tipe majemuk seperti <code class="mono">object</code> (termasuk array dan function).</p><p class="lede">Operator <code class="mono">typeof</code> memberi tahu tipe sebuah nilai saat runtime. Berguna untuk validasi input atau debugging, tapi punya beberapa "quirks" historis yang penting diketahui.</p><ul class="key-points"><li><code class="mono">typeof null</code> menghasilkan <code class="mono">"object"</code> — bug historis dari versi JavaScript pertama, dibiarkan demi kompatibilitas mundur</li><li><code class="mono">typeof</code> array juga <code class="mono">"object"</code> — gunakan <code class="mono">Array.isArray()</code> untuk mengecek array secara spesifik</li><li><code class="mono">undefined</code> berarti "belum diberi nilai", <code class="mono">null</code> berarti "sengaja dikosongkan"</li></ul>',
+      icon:icons.datatypes,
+      controls:[{type:'buttons', prop:'val', label:'Pilih nilai', initial:'number', options:[
+        {value:'number',label:'42'},{value:'string',label:'"halo"'},{value:'boolean',label:'true'},{value:'undefined',label:'undefined'},{value:'null',label:'null'},{value:'array',label:'[1,2,3]'}]}],
+      valMap:{number:'42', string:'"halo"', boolean:'true', undefined:'undefined', null:'null', array:'[1, 2, 3]'},
+      typeMap:{number:'number', string:'string', boolean:'boolean', undefined:'undefined', null:'object', array:'object'},
+      codeTemplate:function(s){ return codeBlock([raw('<span class="cs-kw">typeof</span> '+this.valMap[s.val]+';', true)]); },
+      outputTemplate:function(s){
+        let extra = '';
+        if(s.val==='null') extra = out('<span style="font-size:12px;">⚠ quirk historis JS — null sebenarnya bukan object</span>','console-error');
+        if(s.val==='array') extra = out('<span style="font-size:12px;">⚠ array juga terhitung object — pakai Array.isArray()</span>','console-error');
+        return out('typeof '+this.valMap[s.val]) + out('"'+this.typeMap[s.val]+'"', 'console-good') + extra;
+      },
+      quiz:{question:'typeof null menghasilkan nilai apa?', explain:'"object" — ini adalah bug historis dari JavaScript versi paling awal yang sengaja tidak diperbaiki agar tidak merusak kode lama yang sudah ada (backward compatibility).',
+        options:[{label:'"null"', correct:false},{label:'"undefined"', correct:false},{label:'"object"', correct:true},{label:'Error — null tidak punya tipe', correct:false}]}
+    },
+    {
+      id:'truthyfalsy', label:'Materi 3', title:'Truthy & Falsy Values',
+      intro:'<p class="lede">Setiap nilai di JavaScript, apapun tipenya, punya "identitas boolean" tersembunyi saat dipakai dalam konteks kondisi (<code class="mono">if</code>, <code class="mono">&&</code>, <code class="mono">||</code>, <code class="mono">!!</code>). Nilai yang dianggap setara <code class="mono">false</code> disebut <b>Falsy</b>, sisanya <b>Truthy</b>.</p><ul class="key-points"><li>Hanya ada segelintir nilai Falsy: <code class="mono">false</code>, <code class="mono">0</code>, <code class="mono">""</code> (string kosong), <code class="mono">null</code>, <code class="mono">undefined</code>, <code class="mono">NaN</code></li><li><b>Semua</b> yang lain Truthy — termasuk yang sering disangka falsy: string <code class="mono">"0"</code>, array kosong <code class="mono">[]</code>, dan object kosong <code class="mono">{}</code> semuanya Truthy!</li><li>Ini alasan <code class="mono">if (array.length)</code> lebih aman dipakai daripada <code class="mono">if (array)</code> untuk mengecek array kosong</li></ul>',
+      icon:icons.truthyfalsy,
+      controls:[{type:'buttons', prop:'val', label:'Pilih nilai', initial:'zero', options:[
+        {value:'zero',label:'0'},{value:'emptystr',label:'""'},{value:'strzero',label:'"0"'},{value:'emptyarr',label:'[]'},{value:'nullval',label:'null'},{value:'one',label:'1'}]}],
+      valMap:{zero:'0', emptystr:'""', strzero:'"0"', emptyarr:'[]', nullval:'null', one:'1'},
+      truthyMap:{zero:false, emptystr:false, strzero:true, emptyarr:true, nullval:false, one:true},
+      codeTemplate:function(s){
+        const isTruthy = this.truthyMap[s.val];
+        return codeBlock([
+          raw('<span class="cs-kw">if</span> ('+this.valMap[s.val]+') {'),
+          raw('&nbsp;&nbsp;console.log(<span class="cs-val">"Truthy"</span>);', isTruthy),
+          raw('} <span class="cs-kw">else</span> {'),
+          raw('&nbsp;&nbsp;console.log(<span class="cs-val">"Falsy"</span>);', !isTruthy),
+          raw('}')
+        ]);
+      },
+      outputTemplate:function(s){
+        const isTruthy = this.truthyMap[s.val];
+        return out('Nilai: '+this.valMap[s.val]) + out(isTruthy?'"Truthy"':'"Falsy"', isTruthy?'console-good':'console-error');
+      },
+      quiz:{question:'Array kosong [] dianggap Truthy atau Falsy?', explain:'Truthy — ini kesalahpahaman umum. Hanya 0, "", null, undefined, NaN, dan false yang Falsy; array kosong (dan object kosong {}) tetap Truthy karena tetap merupakan sebuah object.',
+        options:[{label:'Falsy, sama seperti angka 0', correct:false},{label:'Truthy — array tetap dianggap object yang valid', correct:true},{label:'Error, tidak bisa dipakai dalam kondisi if', correct:false},{label:'Tergantung isi array-nya', correct:false}]}
+    },
+    {
+      id:'coercion', label:'Materi 4', title:'Type Coercion & Conversion',
+      intro:'<p class="lede">JavaScript sering mengonversi tipe data secara otomatis (<b>implicit coercion</b>) saat operand berbeda tipe dipakai bersama sebuah operator — dan ini salah satu sumber bug paling membingungkan bagi pemula.</p><ul class="key-points"><li>Operator <code class="mono">+</code> dengan salah satu operand string akan melakukan <b>penggabungan teks</b>: <code class="mono">"5" + 3</code> → <code class="mono">"53"</code></li><li>Operator <code class="mono">-</code>, <code class="mono">*</code>, <code class="mono">/</code> tidak punya makna untuk string, jadi JavaScript mengonversi ke angka dulu: <code class="mono">"5" - 3</code> → <code class="mono">2</code></li><li>Konversi eksplisit lebih aman: <code class="mono">Number("5")</code>, <code class="mono">String(5)</code>, <code class="mono">Boolean(0)</code> — kalian yang mengontrol, bukan JavaScript yang menebak</li></ul>',
+      icon:icons.coercion,
+      controls:[{type:'buttons', prop:'expr', label:'Ekspresi', initial:'plus', options:[
+        {value:'plus',label:'"5" + 3'},{value:'minus',label:'"5" - 3'},{value:'mul',label:'"5" * "2"'},{value:'numconv',label:'Number("42")'}]}],
+      exprMap:{plus:'"5" + 3', minus:'"5" - 3', mul:'"5" * "2"', numconv:'Number("42")'},
+      resultMap:{plus:{val:'"53"', good:false}, minus:{val:'2', good:true}, mul:{val:'10', good:true}, numconv:{val:'42', good:true}},
+      codeTemplate:function(s){ return codeBlock([raw(this.exprMap[s.expr]+';', true)]); },
+      outputTemplate:function(s){
+        const r = this.resultMap[s.expr];
+        let note = '';
+        if(s.expr==='plus') note = out('<span style="font-size:12px;">+ dengan string = penggabungan teks, bukan penjumlahan</span>');
+        else if(s.expr==='minus' || s.expr==='mul') note = out('<span style="font-size:12px;">operator matematika otomatis mengonversi string ke number</span>', 'console-good');
+        else if(s.expr==='numconv') note = out('<span style="font-size:12px;">konversi eksplisit yang disarankan dan aman</span>', 'console-good');
+        return out(this.exprMap[s.expr]) + out(r.val, r.good?'console-good':'console-value') + note;
+      },
+      quiz:{question:'Kenapa "5" + 3 menghasilkan "53", tapi "5" - 3 menghasilkan 2?', explain:'Operator + punya makna ganda: penjumlahan angka ATAU penggabungan teks — dengan operand string, JS memilih penggabungan teks. Operator -, *, / tidak punya makna untuk string sama sekali, jadi JS terpaksa mengonversi string ke angka lebih dulu.',
+        options:[{label:'+ bisa berarti penggabungan teks, sedangkan -/*// hanya bermakna sebagai operasi angka sehingga string dikonversi dulu', correct:true},{label:'- adalah operator yang error pada string, hasil 2 sebenarnya adalah bug', correct:false},{label:'Angka 3 secara otomatis diubah jadi string di kedua kasus', correct:false},{label:'Tidak ada aturan pasti, hasilnya acak tergantung browser', correct:false}]}
+    },
+    {
+      id:'templateliterals', label:'Materi 5', title:'Template Literals',
+      intro:'<p class="lede">Template literals (ditulis dengan backtick <code class="mono">`...`</code>, bukan kutip biasa) mengizinkan interpolasi ekspresi langsung di dalam string lewat <code class="mono">${...}</code> — alternatif yang jauh lebih terbaca dibanding menyambung string dengan operator <code class="mono">+</code>.</p><ul class="key-points"><li>Bisa menyisipkan variabel maupun ekspresi apa pun: <code class="mono">`Total: ${harga * qty}`</code></li><li>Mendukung string multi-baris tanpa perlu karakter escape <code class="mono">\\n</code></li><li>Menghindari kesalahan umum seperti lupa spasi atau salah jumlah tanda kutip saat menyambung banyak potongan string dengan <code class="mono">+</code></li></ul>',
+      icon:icons.templateliterals,
+      controls:[{type:'buttons', prop:'style', label:'Gaya penulisan', initial:'template', options:[{value:'concat',label:'Concatenation (+)'},{value:'template',label:'Template literal'}]}],
+      codeTemplate:function(s){
+        if(s.style==='concat') return codeBlock([raw('<span class="cs-kw">const</span> nama = <span class="cs-val">"Rani"</span>, umur = <span class="cs-val">20</span>;'), raw('<span class="cs-kw">const</span> pesan = <span class="cs-val">"Halo, "</span> + nama + <span class="cs-val">", umur "</span> + umur + <span class="cs-val">" tahun"</span>;', true)]);
+        return codeBlock([raw('<span class="cs-kw">const</span> nama = <span class="cs-val">"Rani"</span>, umur = <span class="cs-val">20</span>;'), raw('<span class="cs-kw">const</span> pesan = `Halo, ${nama}, umur ${umur} tahun`;', true)]);
+      },
+      outputTemplate:function(s){
+        return out('pesan') + out('"Halo, Rani, umur 20 tahun"', 'console-good') + (s.style==='concat' ? out('<span style="font-size:12px;">rawan salah spasi/tanda kutip saat potongannya banyak</span>') : out('<span style="font-size:12px;">lebih mudah dibaca, terutama saat menggabungkan banyak nilai</span>','console-good'));
+      },
+      quiz:{question:'Apa keuntungan utama template literals dibanding operator + untuk menggabungkan string?', explain:'Lebih terbaca: ekspresi bisa langsung disisipkan dengan ${...} tanpa perlu memecah string jadi banyak potongan yang disambung tanda +, dan mengurangi risiko salah spasi/tanda kutip.',
+        options:[{label:'Membuat kode berjalan jauh lebih cepat saat dieksekusi', correct:false},{label:'Lebih terbaca — ekspresi bisa disisipkan langsung tanpa memecah string jadi banyak potongan', correct:true},{label:'Satu-satunya cara menyisipkan angka ke dalam string', correct:false},{label:'Template literal wajib dipakai, operator + untuk string sudah dihapus dari JavaScript', correct:false}]}
+    },
+    {
+      id:'operators', label:'Materi 6', title:'Operators & Comparison',
+      intro:'<p class="lede">JavaScript punya dua operator kesetaraan: <code class="mono">==</code> (loose equality) dan <code class="mono">===</code> (strict equality). Perbedaannya, digabung dengan konsep type coercion yang baru dibahas, adalah sumber bug paling umum bagi pemula.</p><ul class="key-points"><li><code class="mono">==</code> melakukan <b>type coercion</b> — mengubah tipe salah satu operand agar bisa dibandingkan, sehingga <code class="mono">5 == "5"</code> bernilai <code class="mono">true</code></li><li><code class="mono">===</code> membandingkan nilai <em>dan</em> tipe sekaligus, tanpa konversi apa pun — <code class="mono">5 === "5"</code> bernilai <code class="mono">false</code></li><li>Rekomendasi umum: selalu gunakan <code class="mono">===</code> kecuali kalian benar-benar paham dan sengaja memanfaatkan coercion-nya</li></ul>',
+      icon:icons.operators,
+      controls:[
+        {type:'buttons', prop:'pair', label:'Pasangan nilai', initial:'num_str', options:[{value:'num_str',label:'5 vs "5"'},{value:'zero_false',label:'0 vs false'},{value:'null_undef',label:'null vs undefined'}]},
+        {type:'buttons', prop:'op', label:'Operator', initial:'loose', options:[{value:'loose',label:'=='},{value:'strict',label:'==='}]}
+      ],
+      pairMap:{num_str:['5','"5"'], zero_false:['0','false'], null_undef:['null','undefined']},
+      resultMap:{ 'num_str-loose':true, 'num_str-strict':false, 'zero_false-loose':true, 'zero_false-strict':false, 'null_undef-loose':true, 'null_undef-strict':false },
+      codeTemplate:function(s){
+        const p = this.pairMap[s.pair]; const opSym = s.op==='loose' ? '==' : '===';
+        return codeBlock([raw(p[0]+' <span class="cs-kw">'+opSym+'</span> '+p[1]+';', true)]);
+      },
+      outputTemplate:function(s){
+        const p = this.pairMap[s.pair]; const opSym = s.op==='loose' ? '==' : '===';
+        const res = this.resultMap[s.pair+'-'+s.op];
+        return out(p[0]+' '+opSym+' '+p[1]) + out(res ? 'true' : 'false', res ? 'console-good' : 'console-error');
+      },
+      quiz:{question:'Kenapa 0 == false bernilai true, tapi 0 === false bernilai false?', explain:'== melakukan type coercion: false dikonversi ke 0 sebelum dibandingkan, jadi 0 == 0 → true. === tidak melakukan konversi apa pun — karena tipenya beda (number vs boolean), langsung false.',
+        options:[{label:'== mengonversi tipe sebelum membandingkan, === membandingkan tipe dan nilai sekaligus tanpa konversi', correct:true},{label:'false sebenarnya secara internal disimpan sebagai angka 0 di semua kasus', correct:false},{label:'=== hanya berfungsi untuk perbandingan teks, bukan angka', correct:false},{label:'Ini adalah bug JavaScript yang tidak konsisten', correct:false}]}
+    },
+    {
+      id:'scope', label:'Materi 7', title:'Scope: Global, Function, Block',
+      intro:'<p class="lede">Scope menentukan <b>di mana sebuah variabel "terlihat" dan bisa diakses</b>. JavaScript punya tiga tingkat scope yang saling bersarang seperti boneka Matryoshka.</p><ul class="key-points"><li><b>Global scope</b>: variabel yang dideklarasikan di luar fungsi/blok mana pun, bisa diakses dari seluruh file</li><li><b>Function scope</b>: variabel yang dideklarasikan di dalam sebuah fungsi hanya bisa diakses di dalam fungsi itu</li><li><b>Block scope</b>: variabel <code class="mono">let</code>/<code class="mono">const</code> di dalam <code class="mono">{ }</code> (termasuk if, for, while) hanya hidup di dalam blok itu — ini yang tidak berlaku untuk <code class="mono">var</code></li></ul><p class="lede">Aturan praktis: kode di dalam bisa "melihat" ke luar (mengakses variabel global dari dalam fungsi), tapi kode di luar <b>tidak bisa</b> melihat ke dalam.</p>',
+      icon:icons.scope,
+      controls:[{type:'buttons', prop:'scenario', label:'Skenario akses', initial:'blockout', options:[
+        {value:'blockout',label:'Block → luar'},{value:'fnout',label:'Function → luar'},{value:'globalin',label:'Global → dalam function'}]}],
+      codeTemplate:function(s){
+        if(s.scenario==='blockout') return codeBlock([raw('<span class="cs-kw">if</span> (<span class="cs-val">true</span>) {'), raw('&nbsp;&nbsp;<span class="cs-kw">let</span> pesan = <span class="cs-val">"halo"</span>;'), raw('}'), raw('console.log(pesan);', true)]);
+        if(s.scenario==='fnout') return codeBlock([raw('<span class="cs-kw">function</span> <span class="cs-fn">tes</span>() {'), raw('&nbsp;&nbsp;<span class="cs-kw">let</span> rahasia = <span class="cs-val">42</span>;'), raw('}'), raw('console.log(rahasia);', true)]);
+        return codeBlock([raw('<span class="cs-kw">let</span> appName = <span class="cs-val">"WebApp"</span>;'), raw('<span class="cs-kw">function</span> <span class="cs-fn">tampilkan</span>() {'), raw('&nbsp;&nbsp;console.log(appName);', true), raw('}'), raw('<span class="cs-fn">tampilkan</span>();')]);
+      },
+      outputTemplate:function(s){
+        if(s.scenario==='globalin') return out('tampilkan()') + out('"WebApp"', 'console-good');
+        const varName = s.scenario==='blockout' ? 'pesan' : 'rahasia';
+        return out('console.log('+varName+')') + out('Uncaught ReferenceError: '+varName+' is not defined', 'console-error');
+      },
+      quiz:{question:'Variabel yang dideklarasikan dengan let di dalam blok { } bisa diakses dari luar blok tersebut?', explain:'Tidak — let dan const bersifat block-scoped, artinya variabelnya hanya hidup di dalam { } tempat ia dideklarasikan. Mengaksesnya dari luar akan menghasilkan ReferenceError.',
+        options:[{label:'Bisa, selama nama variabelnya tidak duplikat', correct:false},{label:'Tidak — let/const block-scoped, mengaksesnya dari luar menghasilkan ReferenceError', correct:true},{label:'Bisa, tapi hanya untuk const, tidak untuk let', correct:false},{label:'Bisa, sama seperti var yang function-scoped', correct:false}]}
+    },
+    {
+      id:'conditionals', label:'Materi 8', title:'Conditionals',
+      intro:'<p class="lede"><code class="mono">if</code>/<code class="mono">else</code> menjalankan blok kode berbeda tergantung sebuah kondisi yang dievaluasi sebagai Truthy atau Falsy.</p><ul class="key-points"><li><code class="mono">if (kondisi) { ... } else { ... }</code> — struktur paling dasar</li><li><code class="mono">else if</code> merangkai beberapa kondisi berurutan, dicek dari atas ke bawah, berhenti di kondisi pertama yang Truthy</li><li>Ternary <code class="mono">kondisi ? nilaiJikaTrue : nilaiJikaFalse</code> adalah versi ringkas if/else untuk satu ekspresi nilai</li><li><code class="mono">switch</code> berguna saat membandingkan satu nilai terhadap banyak kemungkinan tetap</li></ul>',
+      icon:icons.conditionals,
+      controls:[{type:'buttons', prop:'nilai', label:'Nilai ujian', initial:'82', options:[{value:'55',label:'55'},{value:'70',label:'70'},{value:'82',label:'82'},{value:'95',label:'95'}]}],
+      codeTemplate:function(s){
+        return codeBlock([
+          raw('<span class="cs-kw">if</span> (nilai &gt;= <span class="cs-val">75</span>) {', s.nilai>=75),
+          raw('&nbsp;&nbsp;<span class="cs-kw">return</span> <span class="cs-val">"Lulus"</span>;', s.nilai>=75),
+          raw('} <span class="cs-kw">else</span> {', s.nilai<75),
+          raw('&nbsp;&nbsp;<span class="cs-kw">return</span> <span class="cs-val">"Tidak Lulus"</span>;', s.nilai<75),
+          raw('}')
+        ]);
+      },
+      outputTemplate:function(s){
+        const lulus = s.nilai>=75;
+        return out('Nilai: '+s.nilai) + out(lulus?'"Lulus"':'"Tidak Lulus"', lulus?'console-good':'console-error');
+      },
+      quiz:{question:'Pada rangkaian if/else if, kapan JavaScript berhenti mengecek kondisi berikutnya?', explain:'Begitu satu kondisi terpenuhi (true), blok itu dijalankan dan sisa else if/else di bawahnya langsung dilewati — tidak ada pengecekan lanjutan.',
+        options:[{label:'Setelah kondisi true pertama ditemukan dan blok itu dijalankan', correct:true},{label:'Selalu mengecek semua kondisi sampai akhir, tidak peduli hasilnya', correct:false},{label:'Hanya kondisi terakhir (else) yang benar-benar dieksekusi', correct:false},{label:'Urutan penulisan kondisi tidak memengaruhi hasil apa pun', correct:false}]}
+    },
+    {
+      id:'loops', label:'Materi 9', title:'Loops',
+      intro:'<p class="lede">Loop menjalankan blok kode berulang kali tanpa perlu menulis ulang — inti dari otomatisasi dalam pemrograman.</p><ul class="key-points"><li><code class="mono">for (let i = 0; i &lt; n; i++)</code> — paling umum saat kalian tahu persis berapa kali harus berulang</li><li><code class="mono">while (kondisi)</code> — berulang selama kondisi masih true, cocok saat jumlah iterasi tidak diketahui di awal</li><li><code class="mono">for...of</code> — cara modern untuk mengiterasi isi array secara langsung, tanpa perlu index manual</li><li>Lupa mengubah kondisi (misalnya lupa <code class="mono">i++</code>) menghasilkan <b>infinite loop</b> yang bisa membekukan browser</li></ul>',
+      icon:icons.loops,
+      controls:[{type:'buttons', prop:'kind', label:'Jenis loop', initial:'for', options:[{value:'for',label:'for'},{value:'while',label:'while'},{value:'forof',label:'for...of'}]}],
+      codeTemplate:function(s){
+        if(s.kind==='for') return codeBlock([raw('<span class="cs-kw">for</span> (<span class="cs-kw">let</span> i = <span class="cs-val">0</span>; i &lt; <span class="cs-val">3</span>; i++) {', true), raw('&nbsp;&nbsp;console.log(i);'), raw('}')]);
+        if(s.kind==='while') return codeBlock([raw('<span class="cs-kw">let</span> i = <span class="cs-val">0</span>;'), raw('<span class="cs-kw">while</span> (i &lt; <span class="cs-val">3</span>) {', true), raw('&nbsp;&nbsp;console.log(i);'), raw('&nbsp;&nbsp;i++;'), raw('}')]);
+        return codeBlock([raw('<span class="cs-kw">const</span> buah = [<span class="cs-val">"apel","jeruk","pisang"</span>];'), raw('<span class="cs-kw">for</span> (<span class="cs-kw">const</span> b <span class="cs-kw">of</span> buah) {', true), raw('&nbsp;&nbsp;console.log(b);'), raw('}')]);
+      },
+      outputTemplate:function(s){
+        if(s.kind==='forof') return ['apel','jeruk','pisang'].map(function(v){ return out('"'+v+'"', 'console-good'); }).join('');
+        return [0,1,2].map(function(v){ return out(v, 'console-good'); }).join('');
+      },
+      quiz:{question:'Apa yang terjadi jika kondisi while tidak pernah menjadi false (misalnya lupa i++)?', explain:'Terjadi infinite loop — browser terus mengeksekusi blok berulang tanpa henti dan biasanya akan freeze/hang karena tidak pernah keluar dari loop.',
+        options:[{label:'JavaScript otomatis menghentikannya setelah 1000 iterasi', correct:false},{label:'Terjadi infinite loop yang bisa membekukan (freeze) browser', correct:true},{label:'Loop akan langsung dilewati tanpa dijalankan sama sekali', correct:false},{label:'Browser otomatis mengubahnya menjadi for loop', correct:false}]}
+    },
+    {
+      id:'functions', label:'Materi 10', title:'Functions',
+      intro:'<p class="lede">Fungsi adalah blok kode yang bisa dipanggil ulang, menerima input (parameter) dan mengembalikan output (<code class="mono">return</code>) — cara utama menghindari duplikasi kode.</p><ul class="key-points"><li><b>Function declaration</b>: <code class="mono">function greet(nama) { ... }</code> — bisa dipanggil bahkan sebelum definisinya ditulis (hoisting)</li><li><b>Arrow function</b>: <code class="mono">const greet = (nama) =&gt; { ... }</code> — sintaks lebih ringkas, populer di kode modern, tidak di-hoist</li><li><b>Default parameter</b>: <code class="mono">function greet(nama = "Teman")</code> memberi nilai fallback saat argumen tidak diisi</li></ul>',
+      icon:icons.functions,
+      controls:[
+        {type:'buttons', prop:'style', label:'Gaya penulisan', initial:'declaration', options:[{value:'declaration',label:'function'},{value:'arrow',label:'arrow'}]},
+        {type:'buttons', prop:'arg', label:'Argumen saat dipanggil', initial:'given', options:[{value:'given',label:'"Sari"'},{value:'empty',label:'(kosong)'}]}
+      ],
+      codeTemplate:function(s){
+        const def = s.style==='declaration'
+          ? raw('<span class="cs-kw">function</span> <span class="cs-fn">greet</span>(nama = <span class="cs-val">"Teman"</span>) {')
+          : raw('<span class="cs-kw">const</span> <span class="cs-fn">greet</span> = (nama = <span class="cs-val">"Teman"</span>) =&gt; {');
+        const call = s.arg==='given' ? raw('<span class="cs-fn">greet</span>(<span class="cs-val">"Sari"</span>);', true) : raw('<span class="cs-fn">greet</span>();', true);
+        return codeBlock([def, raw('&nbsp;&nbsp;<span class="cs-kw">return</span> `Hello, ${nama}!`;'), raw('}'), call]);
+      },
+      outputTemplate:function(s){
+        const nama = s.arg==='given' ? 'Sari' : 'Teman';
+        return out('greet('+(s.arg==='given'?'"Sari"':'')+')') + out('"Hello, '+nama+'!"', 'console-good');
+      },
+      quiz:{question:'Apa keuntungan memberi default parameter seperti nama = "Teman"?', explain:'Jika fungsi dipanggil tanpa argumen untuk parameter itu, JavaScript otomatis memakai nilai default alih-alih menghasilkan undefined — mencegah bug yang tidak disengaja.',
+        options:[{label:'Mencegah nama bernilai undefined saat fungsi dipanggil tanpa argumen', correct:true},{label:'Membuat fungsi berjalan lebih cepat secara signifikan', correct:false},{label:'Parameter itu jadi wajib diisi, tidak boleh dikosongkan', correct:false},{label:'Hanya berfungsi pada arrow function, tidak pada function declaration', correct:false}]}
+    },
+    {
+      id:'arrays', label:'Materi 11', title:'Arrays (Dasar)',
+      intro:'<p class="lede">Array menyimpan sekumpulan nilai berurutan dalam satu variabel, diakses lewat index yang dimulai dari <code class="mono">0</code>.</p><ul class="key-points"><li><code class="mono">array.length</code> memberi jumlah elemen</li><li><code class="mono">array.push(nilai)</code> menambah elemen di akhir; <code class="mono">array.pop()</code> menghapus elemen terakhir</li><li><code class="mono">array.includes(nilai)</code> mengecek keberadaan sebuah nilai, mengembalikan boolean</li><li>Index dimulai dari 0 — elemen pertama adalah <code class="mono">array[0]</code>, bukan <code class="mono">array[1]</code></li></ul>',
+      icon:icons.arrays,
+      controls:[{type:'buttons', prop:'method', label:'Method', initial:'push', options:[{value:'push',label:'push(4)'},{value:'pop',label:'pop()'},{value:'includes',label:'includes(2)'},{value:'length',label:'length'}]}],
+      codeTemplate:function(s){
+        const base = raw('<span class="cs-kw">const</span> arr = [<span class="cs-val">1, 2, 3</span>];');
+        const call = { push:'arr.push(4);', pop:'arr.pop();', includes:'arr.includes(2);', length:'arr.length;' }[s.method];
+        return codeBlock([base, raw(call, true)]);
+      },
+      outputTemplate:function(s){
+        if(s.method==='push') return out('arr.push(4)') + out('[1, 2, 3, 4]', 'console-good');
+        if(s.method==='pop') return out('arr.pop()') + out('3', 'console-value') + out('<span style="font-size:12px;">arr sekarang: [1, 2]</span>');
+        if(s.method==='includes') return out('arr.includes(2)') + out('true', 'console-good');
+        return out('arr.length') + out('3', 'console-value');
+      },
+      quiz:{question:'Elemen pertama dari array [1, 2, 3] diakses dengan cara apa?', explain:'Index array dimulai dari 0, jadi elemen pertama adalah arr[0] (bernilai 1), bukan arr[1].',
+        options:[{label:'arr[1]', correct:false},{label:'arr[0]', correct:true},{label:'arr.first()', correct:false},{label:'arr.get(1)', correct:false}]}
+    },
+    {
+      id:'arraymethods', label:'Materi 12', title:'Array Methods: forEach, map, filter',
+      intro:'<p class="lede">Di luar loop tradisional, array punya method bawaan untuk pola iterasi yang sangat umum — lebih ringkas dan lebih menyatakan <em>maksud</em> kodenya dibanding for loop generik.</p><ul class="key-points"><li><code class="mono">forEach(callback)</code>: menjalankan sebuah fungsi untuk tiap elemen, murni efek samping (misalnya console.log) — tidak menghasilkan array baru</li><li><code class="mono">map(callback)</code>: membuat <b>array baru</b> berisi hasil transformasi tiap elemen — panjangnya selalu sama dengan array asal</li><li><code class="mono">filter(callback)</code>: membuat <b>array baru</b> berisi hanya elemen yang lolos sebuah kondisi — panjangnya bisa lebih pendek dari array asal</li></ul><p class="lede">Ketiganya menerima sebuah <em>callback function</em> (biasanya ditulis sebagai arrow function) yang dijalankan untuk tiap elemen array.</p>',
+      icon:icons.arraymethods,
+      controls:[{type:'buttons', prop:'method', label:'Method', initial:'map', options:[{value:'foreach',label:'forEach'},{value:'map',label:'map'},{value:'filter',label:'filter'}]}],
+      codeTemplate:function(s){
+        const base = raw('<span class="cs-kw">const</span> angka = [<span class="cs-val">1, 2, 3, 4</span>];');
+        if(s.method==='foreach') return codeBlock([base, raw('angka.forEach(n =&gt; console.log(n * 2));', true)]);
+        if(s.method==='map') return codeBlock([base, raw('<span class="cs-kw">const</span> hasil = angka.map(n =&gt; n * <span class="cs-val">2</span>);', true)]);
+        return codeBlock([base, raw('<span class="cs-kw">const</span> hasil = angka.filter(n =&gt; n % <span class="cs-val">2</span> === <span class="cs-val">0</span>);', true)]);
+      },
+      outputTemplate:function(s){
+        if(s.method==='foreach') return [2,4,6,8].map(function(v){ return out(v, 'console-good'); }).join('') + out('<span style="font-size:12px;">forEach sendiri tidak mengembalikan apa-apa (undefined)</span>');
+        if(s.method==='map') return out('hasil') + out('[2, 4, 6, 8]', 'console-good') + out('<span style="font-size:12px;">array baru, panjang tetap 4</span>');
+        return out('hasil') + out('[2, 4]', 'console-good') + out('<span style="font-size:12px;">array baru, hanya yang lolos kondisi (genap)</span>');
+      },
+      quiz:{question:'Apa perbedaan utama antara map() dan forEach()?', explain:'map() mengembalikan array baru berisi hasil transformasi tiap elemen, sedangkan forEach() tidak mengembalikan apa-apa — ia hanya menjalankan efek samping (seperti console.log) untuk tiap elemen.',
+        options:[{label:'map() mengembalikan array baru hasil transformasi, forEach() tidak mengembalikan apa-apa', correct:true},{label:'forEach() lebih cepat secara signifikan dibanding map() untuk array besar', correct:false},{label:'map() hanya bisa dipakai pada array angka, forEach() untuk semua tipe', correct:false},{label:'Keduanya identik, hanya beda nama', correct:false}]}
+    },
+    {
+      id:'objects', label:'Materi 13', title:'Objects (Dasar)',
+      intro:'<p class="lede">Object menyimpan data sebagai pasangan <b>key: value</b> yang diberi nama, bukan berurutan seperti array — cocok untuk merepresentasikan satu entitas dengan banyak atribut (misalnya satu mahasiswa dengan nama, umur, status).</p><ul class="key-points"><li>Akses properti dengan dot notation: <code class="mono">mahasiswa.nama</code></li><li>Atau bracket notation: <code class="mono">mahasiswa["nama"]</code> — wajib dipakai kalau nama properti disimpan dalam variabel</li><li>Menambah properti baru semudah: <code class="mono">mahasiswa.jurusan = "TI"</code>, tidak perlu dideklarasikan dulu</li></ul>',
+      icon:icons.objects,
+      controls:[{type:'buttons', prop:'action', label:'Aksi', initial:'dot', options:[{value:'dot',label:'Akses (dot)'},{value:'bracket',label:'Akses (bracket)'},{value:'add',label:'Tambah properti'}]}],
+      codeTemplate:function(s){
+        const base = raw('<span class="cs-kw">const</span> mhs = { nama: <span class="cs-val">"Rani"</span>, umur: <span class="cs-val">20</span> };');
+        let call;
+        if(s.action==='dot') call = raw('mhs.nama;', true);
+        else if(s.action==='bracket') call = raw('mhs["nama"];', true);
+        else call = raw('mhs.jurusan = <span class="cs-val">"TI"</span>;', true);
+        return codeBlock([base, call]);
+      },
+      outputTemplate:function(s){
+        if(s.action==='dot') return out('mhs.nama') + out('"Rani"', 'console-good');
+        if(s.action==='bracket') return out('mhs["nama"]') + out('"Rani"', 'console-good');
+        return out('mhs.jurusan = "TI"') + out('<span style="font-size:12px;">mhs sekarang: {nama:"Rani", umur:20, jurusan:"TI"}</span>', 'console-good');
+      },
+      quiz:{question:'Kapan bracket notation (mhs["nama"]) wajib dipakai, bukan dot notation?', explain:'Saat nama properti disimpan dalam sebuah variabel (misalnya mhs[keyVariabel]) atau mengandung karakter yang tidak valid sebagai nama identifier (spasi, dimulai angka, dsb).',
+        options:[{label:'Saat nama properti berada dalam variabel, atau mengandung karakter tak valid sebagai identifier', correct:true},{label:'Bracket notation sebenarnya tidak pernah diperlukan, dot selalu cukup', correct:false},{label:'Hanya untuk array, tidak berlaku untuk object', correct:false},{label:'Saat objectnya kosong (belum ada properti sama sekali)', correct:false}]}
+    },
+    {
+      id:'scriptembed', label:'Materi 14', title:'Inline vs External Script',
+      intro:'<p class="lede">Kode JavaScript disisipkan ke halaman HTML lewat tag <code class="mono">&lt;script&gt;</code>, dengan dua cara berbeda.</p><ul class="key-points"><li><b>Inline</b>: kode ditulis langsung di antara <code class="mono">&lt;script&gt;...&lt;/script&gt;</code> — cepat untuk contoh kecil atau eksperimen singkat</li><li><b>External</b>: <code class="mono">&lt;script src="app.js"&gt;&lt;/script&gt;</code> merujuk ke file <code class="mono">.js</code> terpisah — direkomendasikan untuk proyek nyata karena file bisa di-cache browser, dipakai ulang di banyak halaman, dan memisahkan struktur (HTML) dari perilaku (JS)</li><li>Kalau atribut <code class="mono">src</code> diisi, apa pun yang ditulis di antara tag <code class="mono">&lt;script&gt;&lt;/script&gt;</code> akan <b>diabaikan</b> oleh browser</li></ul>',
+      icon:icons.scriptembed,
+      controls:[{type:'buttons', prop:'mode', label:'Cara menyisipkan', initial:'external', options:[{value:'inline',label:'Inline'},{value:'external',label:'External (src)'}]}],
+      codeTemplate:function(s){
+        if(s.mode==='inline') return codeBlock([raw('&lt;script&gt;', true), raw('&nbsp;&nbsp;console.log(<span class="cs-val">"Halo dari inline!"</span>);'), raw('&lt;/script&gt;')]);
+        return codeBlock([raw('&lt;script src=<span class="cs-val">"app.js"</span>&gt;&lt;/script&gt;', true), comment('isi app.js:'), raw('console.log(<span class="cs-val">"Halo dari app.js!"</span>);')]);
+      },
+      outputTemplate:function(s){
+        if(s.mode==='inline') return out('"Halo dari inline!"', 'console-good');
+        return out('"Halo dari app.js!"', 'console-good') + out('<span style="font-size:12px;">file ini bisa dipakai ulang di halaman lain &amp; di-cache browser</span>');
+      },
+      quiz:{question:'Apa yang terjadi jika &lt;script src="app.js"&gt; juga diisi kode JavaScript di antara tag &lt;script&gt; dan &lt;/script&gt;?', explain:'Browser mengabaikan sepenuhnya kode di antara tag tersebut — atribut src selalu diprioritaskan, isi inline-nya tidak pernah dijalankan.',
+        options:[{label:'Kode di antara tag diabaikan sepenuhnya — src selalu diprioritaskan', correct:true},{label:'Kedua kode (src dan inline) akan sama-sama dijalankan berurutan', correct:false},{label:'Browser menolak memuat halaman dan menampilkan error', correct:false},{label:'app.js diabaikan, hanya kode inline yang dijalankan', correct:false}]}
+    },
+    {
+      id:'scriptplacement', label:'Materi 15', title:'Script Placement: head, bottom, defer',
+      intro:'<p class="lede">Browser mem-parsing HTML dari atas ke bawah. Kalau <code class="mono">&lt;script&gt;</code> diletakkan di <code class="mono">&lt;head&gt;</code> tanpa atribut apa pun, browser <b>berhenti dulu</b> mengunduh &amp; menjalankan script itu sebelum lanjut mem-parsing <code class="mono">&lt;body&gt;</code> — padahal elemen yang dicari script biasanya ada di body.</p><ul class="key-points"><li>Script di <code class="mono">&lt;head&gt;</code> tanpa atribut: sering menghasilkan error <code class="mono">Cannot read properties of null</code> karena elemen HTML di bawahnya belum ada saat script berjalan</li><li>Script tepat sebelum <code class="mono">&lt;/body&gt;</code>: solusi klasik — semua HTML di atasnya sudah pasti selesai diparsing</li><li>Atribut <code class="mono">defer</code> di <code class="mono">&lt;head&gt;</code>: solusi modern — file diunduh di background sambil HTML terus diparsing, baru dijalankan setelah parsing selesai</li></ul>',
+      icon:icons.scriptplacement,
+      controls:[{type:'buttons', prop:'placement', label:'Penempatan script', initial:'bottom', options:[{value:'head',label:'head (tanpa atribut)'},{value:'bottom',label:'sebelum </body>'},{value:'headdefer',label:'head + defer'}]}],
+      codeTemplate:function(s){
+        let head, body;
+        if(s.placement==='head'){ head = raw('&nbsp;&nbsp;&lt;script src=<span class="cs-val">"app.js"</span>&gt;&lt;/script&gt;', true); body = ''; }
+        else if(s.placement==='headdefer'){ head = raw('&nbsp;&nbsp;&lt;script src=<span class="cs-val">"app.js"</span> <span class="cs-kw">defer</span>&gt;&lt;/script&gt;', true); body = ''; }
+        else { head = ''; body = raw('&nbsp;&nbsp;&lt;script src=<span class="cs-val">"app.js"</span>&gt;&lt;/script&gt;', true); }
+        const lines = [raw('&lt;head&gt;')];
+        if(head) lines.push(head);
+        lines.push(raw('&lt;/head&gt;'), raw('&lt;body&gt;'), raw('&nbsp;&nbsp;&lt;button id=<span class="cs-val">"tombol"</span>&gt;Klik&lt;/button&gt;'));
+        if(body) lines.push(body);
+        lines.push(raw('&lt;/body&gt;'));
+        return codeBlock(lines) + codeBlock([comment('isi app.js:'), raw('document.getElementById(<span class="cs-val">"tombol"</span>).addEventListener(...);')]);
+      },
+      outputTemplate:function(s){
+        if(s.placement==='head') return out('Uncaught TypeError: Cannot read properties of null (reading \'addEventListener\')', 'console-error') + out('<span style="font-size:12px;">#tombol belum ada di DOM saat script dijalankan</span>');
+        return out('<span style="font-size:12px;">event listener terpasang dengan sukses ✓</span>', 'console-good');
+      },
+      quiz:{question:'Kenapa meletakkan &lt;script&gt; di &lt;head&gt; tanpa atribut apa pun sering menyebabkan error "Cannot read properties of null"?', explain:'Script dijalankan sebelum HTML di bawahnya — termasuk elemen yang dicari script — sempat diparsing browser, sehingga getElementById mengembalikan null.',
+        options:[{label:'Script dijalankan sebelum elemen yang dicarinya sempat diparsing browser', correct:true},{label:'File JavaScript-nya pasti rusak atau salah ketik', correct:false},{label:'head bukan tempat yang valid secara sintaks untuk tag script', correct:false},{label:'id="tombol" tidak boleh dipakai di dalam head', correct:false}]}
+    }
+  ];
+
+  const deckPlan = [
+    {kind:'static', html:titleHTML},
+    {kind:'static', html:agendaHTML},
+    {kind:'static', html:consolePatternsHTML},
+    {kind:'topic', id:'variables'}, {kind:'topic', id:'datatypes'}, {kind:'topic', id:'truthyfalsy'},
+    {kind:'topic', id:'coercion'}, {kind:'topic', id:'templateliterals'}, {kind:'topic', id:'operators'},
+    {kind:'topic', id:'scope'}, {kind:'topic', id:'conditionals'}, {kind:'topic', id:'loops'},
+    {kind:'topic', id:'functions'}, {kind:'topic', id:'arrays'}, {kind:'topic', id:'arraymethods'}, {kind:'topic', id:'objects'},
+    {kind:'topic', id:'scriptembed'}, {kind:'topic', id:'scriptplacement'},
+    {kind:'static', html:enrichmentHTML},
+    {kind:'static', html:challengeHTML},
+    {kind:'static', html:closingHTML}
+  ];
+  const topicById = {}; topics.forEach(function(t){ topicById[t.id] = t; });
+
+  function renderControls(topic){
+    return topic.controls.map(function(ctrl){
+      const btns = ctrl.options.map(function(o){ return '<button class="choice'+(o.value===ctrl.initial?' on':'')+'" data-value="'+o.value+'">'+o.label+'</button>'; }).join('');
+      return '<div class="control-group"><label>'+ctrl.label+'</label><div class="choice-row" data-prop="'+ctrl.prop+'">'+btns+'</div></div>';
+    }).join('');
+  }
+
+  function renderTopic(topic){
+    let html = '<section class="slide" id="intro-'+topic.id+'">';
+    html += '<div class="tag">'+topic.label+'</div><h2 class="sub">'+topic.title+'</h2>';
+    html += '<div class="intro-layout"><div class="intro-text">'+topic.intro+'</div><div class="intro-visual">'+topic.icon+'</div></div>';
+    html += '</section>';
+
+    html += '<section class="slide" data-example="'+topic.id+'">';
+    html += '<div class="tag tag-muted">'+topic.title+' — Contoh interaktif</div>';
+    html += '<div class="example-layout">';
+    html += '<div class="ex-controls">'+renderControls(topic)+'</div>';
+    html += '<div><div class="example-col-label">Kode JavaScript</div><div class="code-panel" data-code></div></div>';
+    html += '<div><div class="example-col-label">Console Output</div><div class="code-panel" data-result></div></div>';
+    html += '</div></section>';
+
+    topic.quiz.shuffled = shuffle(topic.quiz.options);
+    html += '<section class="slide qc-slide" data-quiz="'+topic.id+'">';
+    html += '<div class="tag tag-mint">Cek pemahaman · '+topic.title+'</div>';
+    html += '<h2 class="sub">'+topic.quiz.question+'</h2>';
+    html += '<div class="qc-options">'+topic.quiz.shuffled.map(function(o,i){ return '<button class="qc-option" data-idx="'+i+'">'+o.label+'</button>'; }).join('')+'</div>';
+    html += '<p class="qc-feedback"></p>';
+    html += '</section>';
+    return html;
+  }
+
+  let slidesHTML = '';
+  deckPlan.forEach(function(entry){
+    slidesHTML += entry.kind==='static' ? entry.html : renderTopic(topicById[entry.id]);
+  });
+  document.getElementById('slides').innerHTML = slidesHTML;
+
+  // ---------- theme toggle ----------
+  const themeToggle = document.getElementById('themeToggle');
+  const sunIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Light</span>';
+  const moonIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>Dark</span>';
+  let isLight = false;
+  themeToggle.addEventListener('click', function(){
+    isLight = !isLight;
+    document.documentElement.classList.toggle('light-theme', isLight);
+    themeToggle.innerHTML = isLight ? moonIcon : sunIcon;
+  });
+
+  // ---------- fullscreen presentation mode ----------
+  const fsToggle = document.getElementById('fsToggle');
+  const fsEnterIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>Layar Penuh</span>';
+  const fsExitIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg><span>Keluar Penuh</span>';
+  function toggleFullscreen(){
+    if(!document.fullscreenElement){
+      document.documentElement.requestFullscreen().catch(function(){});
+      if(fsToggle) fsToggle.innerHTML = fsExitIcon;
+    } else {
+      if(document.exitFullscreen) document.exitFullscreen().catch(function(){});
+      if(fsToggle) fsToggle.innerHTML = fsEnterIcon;
+    }
+  }
+  if(fsToggle){
+    fsToggle.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', function(){
+      fsToggle.innerHTML = document.fullscreenElement ? fsExitIcon : fsEnterIcon;
+    });
+  }
+
+  // ---------- live calculator simulator on challenge slide ----------
+  const calcA = document.getElementById('calcA');
+  const calcB = document.getElementById('calcB');
+  const calcOp = document.getElementById('calcOp');
+  const calcRunBtn = document.getElementById('calcRunBtn');
+  const calcOut = document.getElementById('calcOut');
+
+  function runCalculatorSim(){
+    if(!calcA || !calcB || !calcOp || !calcOut) return;
+    const a = parseFloat(calcA.value);
+    const b = parseFloat(calcB.value);
+    const op = calcOp.value;
+
+    if(isNaN(a) || isNaN(b)){
+      calcOut.innerHTML = '<span class="console-error">✕ Error: Input a dan b harus berupa angka valid!</span>';
+      return;
+    }
+
+    if(op === '/' && b === 0){
+      calcOut.innerHTML = '<span class="console-error">✕ Error: Pembagian dengan 0 tidak diperbolehkan!</span>';
+      return;
+    }
+
+    let res;
+    if(op === '+') res = a + b;
+    else if(op === '-') res = a - b;
+    else if(op === '*') res = a * b;
+    else if(op === '/') res = a / b;
+
+    calcOut.innerHTML = '<span class="console-good">› kalkulator(' + a + ', ' + b + ', "' + op + '") → <b class="console-value">' + res + '</b> ✓</span>';
+  }
+
+  if(calcRunBtn){
+    calcRunBtn.addEventListener('click', runCalculatorSim);
+    [calcA, calcB, calcOp].forEach(function(el){
+      if(el) el.addEventListener('input', runCalculatorSim);
+    });
+  }
+
+  // ---------- wire up each topic's example + quiz ----------
+  const COOLDOWN = 7;
+  topics.forEach(function(topic){
+    const exampleSection = document.querySelector('[data-example="'+topic.id+'"]');
+    const codeEl = exampleSection.querySelector('[data-code]');
+    const resultEl = exampleSection.querySelector('[data-result]');
+    const state = {};
+    topic.controls.forEach(function(c){ state[c.prop] = c.initial; });
+
+    function update(){
+      codeEl.innerHTML = topic.codeTemplate(state);
+      resultEl.innerHTML = topic.outputTemplate(state);
+    }
+    exampleSection.querySelectorAll('.choice-row').forEach(function(group){
+      const prop = group.dataset.prop;
+      group.addEventListener('click', function(e){
+        const btn = e.target.closest('.choice'); if(!btn) return;
+        group.querySelectorAll('.choice').forEach(function(b){ b.classList.remove('on'); });
+        btn.classList.add('on');
+        state[prop] = btn.dataset.value;
+        update();
+      });
+    });
+    update();
+
+    const quizSection = document.querySelector('[data-quiz="'+topic.id+'"]');
+    const feedback = quizSection.querySelector('.qc-feedback');
+    let answered = false;
+    let cooldownTimer = null;
+
+    function clearTimer(){
+      if(cooldownTimer){
+        clearInterval(cooldownTimer);
+        cooldownTimer = null;
+      }
+    }
+
+    function resetQuiz(){
+      clearTimer();
+      quizSection.querySelectorAll('.qc-option').forEach(function(b){ b.classList.remove('correct','wrong','locked'); });
+      feedback.textContent = ''; feedback.className = 'qc-feedback';
+      answered = false;
+    }
+
+    quizSection.querySelectorAll('.qc-option').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(answered) return;
+        answered = true;
+        clearTimer();
+        quizSection.querySelectorAll('.qc-option').forEach(function(b){ b.classList.add('locked'); });
+        const chosen = topic.quiz.shuffled[parseInt(btn.dataset.idx, 10)];
+        if(chosen.correct){
+          btn.classList.add('correct');
+          feedback.className = 'qc-feedback good';
+          feedback.textContent = 'Betul — ' + topic.quiz.explain;
+          quizSection.classList.add('passed');
+          if(dots[slides.indexOf(quizSection)]){
+            dots[slides.indexOf(quizSection)].classList.add('passed-dot');
+          }
+          updateNextState();
+        } else {
+          btn.classList.add('wrong');
+          let remaining = COOLDOWN;
+          feedback.className = 'qc-feedback bad';
+          feedback.textContent = 'Belum tepat. Pelajari lagi materinya — kembali otomatis dalam ' + remaining + 's…';
+          cooldownTimer = setInterval(function(){
+            remaining--;
+            const stillHere = slides[idx] === quizSection;
+            if(remaining > 0){
+              if(stillHere) feedback.textContent = 'Belum tepat. Pelajari lagi materinya — kembali otomatis dalam ' + remaining + 's…';
+            } else {
+              clearTimer();
+              resetQuiz();
+              if(stillHere) goToId('intro-'+topic.id);
+            }
+          }, 1000);
+        }
+      });
+    });
+  });
+
+  // ---------- navigation with quiz gate ----------
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const curNum = document.getElementById('curNum');
+  const totNum = document.getElementById('totNum');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const mobileProgress = document.getElementById('mobileProgress');
+  let idx = 0;
+  totNum.textContent = slides.length;
+  slides[0].classList.add('active');
+
+  function canAdvance(){
+    const cur = slides[idx];
+    if(cur.classList.contains('qc-slide') && !cur.classList.contains('passed')) return false;
+    return true;
+  }
+
+  function canJumpTo(targetIdx){
+    if(targetIdx <= idx) return true;
+    for(let j = 0; j < targetIdx; j++){
+      if(slides[j].classList.contains('qc-slide') && !slides[j].classList.contains('passed')){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  slides.forEach(function(_, i){
+    const d = document.createElement('button');
+    d.className = 'dot' + (i===0 ? ' on' : '');
+    d.title = 'Slide ' + (i+1);
+    d.addEventListener('click', function(){
+      if(!canJumpTo(i)){ shake(); return; }
+      goTo(i);
+    });
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function updateNextState(){
+    const cur = slides[idx];
+    const blocked = cur.classList.contains('qc-slide') && !cur.classList.contains('passed');
+    nextBtn.classList.toggle('locked', blocked);
+    if(blocked){
+      nextBtn.textContent = 'Jawab dengan benar untuk lanjut';
+    } else {
+      nextBtn.innerHTML = 'Berikutnya<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left:6px; vertical-align:-1px;"><polyline points="9 18 15 12 9 6"/></svg>';
+    }
+  }
+  function shake(){
+    nextBtn.classList.add('shake');
+    setTimeout(function(){ nextBtn.classList.remove('shake'); }, 350);
+  }
+  function goTo(i){
+    if(i < 0 || i >= slides.length) return;
+    slides[idx].classList.remove('active'); dots[idx].classList.remove('on');
+    idx = i;
+    slides[idx].classList.add('active'); dots[idx].classList.add('on');
+    curNum.textContent = idx+1;
+    if(mobileProgress) mobileProgress.textContent = 'Slide ' + (idx+1) + ' / ' + slides.length;
+    prevBtn.disabled = idx===0;
+    updateNextState();
+  }
+  function goToId(id){
+    const target = document.getElementById(id);
+    const i = slides.indexOf(target);
+    if(i>=0) goTo(i);
+  }
+  prevBtn.addEventListener('click', function(){ goTo(idx-1); });
+  nextBtn.addEventListener('click', function(){ if(canAdvance()) goTo(idx+1); else shake(); });
+  prevBtn.disabled = true;
+  updateNextState();
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e){
+    if(['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+    if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){
+      if(e.key === ' ') e.preventDefault();
+      if(canAdvance()) goTo(idx+1); else shake();
+    }
+    if(e.key === 'ArrowLeft' || e.key === 'PageUp'){
+      goTo(idx-1);
+    }
+    if(e.key === 'f' || e.key === 'F'){
+      toggleFullscreen();
+    }
+  });
+
+  // Touch Swipe for mobile & tablet
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.addEventListener('touchstart', function(e){
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e){
+    const diffX = e.changedTouches[0].screenX - touchStartX;
+    const diffY = e.changedTouches[0].screenY - touchStartY;
+    if(Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)){
+      if(diffX < 0){
+        if(canAdvance()) goTo(idx+1); else shake();
+      } else {
+        goTo(idx-1);
+      }
+    }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
