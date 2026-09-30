@@ -1,0 +1,3560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Modul Kuliah Interaktif Minggu 5: DOM Manipulation & Event Handling — DOM tree, querySelector, textContent vs innerHTML, classList & atribut, createElement, addEventListener, objek event, validasi form, bubbling, event delegation, dan pola state → render. Dilengkapi Live Coding Lab dengan auto-check.">
+  <title>Minggu 5 · DOM Manipulation &amp; Event Handling — Pemrograman Web ET234305</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0E2438;
+      --panel: #123253;
+      --panel-2: #1B3E60;
+      --surface: #1B3E60;
+      --line: #3C6E8F;
+      --line-soft: rgba(74, 144, 184, 0.22);
+      --text: #EAF2F6;
+      --muted: #8FB2C8;
+      --amber: #F2A93B;
+      --coral: #E8654A;
+      --mint: #5FC7A3;
+      --on-text: #0E2438;
+      --radius: 10px;
+    }
+
+    html.light-theme {
+      --bg: #F6F8FA;
+      --panel: #EAF0F5;
+      --panel-2: #DCE6EE;
+      --surface: #FFFFFF;
+      --line: #B7C9D6;
+      --line-soft: rgba(60, 110, 143, 0.18);
+      --text: #132A3E;
+      --muted: #5D7A91;
+      --amber: #B8690A;
+      --coral: #B23A26;
+      --mint: #1F7A5C;
+      --on-text: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      overflow: hidden;
+      transition: background .2s ease, color .2s ease;
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      opacity: .6;
+      z-index: 0;
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 36px;
+      border-bottom: 1px solid var(--line-soft);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .topbar .crumb b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--panel-2);
+    }
+
+    .slides {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 40px 60px 30px;
+      display: none;
+      flex-direction: column;
+      justify-content: safe center;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    h1.headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      margin: 0 0 14px;
+      max-width: 16ch;
+      color: var(--text);
+    }
+
+    h2.sub {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: clamp(19px, 2.2vw, 26px);
+      margin: 0 0 16px;
+      color: var(--text);
+    }
+
+    p.lede {
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--muted);
+      max-width: 68ch;
+      margin: 0 0 14px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 16px;
+      width: fit-content;
+      background: color-mix(in srgb, var(--amber) 12%, transparent);
+      color: var(--amber);
+      border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
+    }
+
+    .tag-mint {
+      background: color-mix(in srgb, var(--mint) 12%, transparent);
+      color: var(--mint);
+      border-color: color-mix(in srgb, var(--mint) 40%, transparent);
+    }
+
+    .tag-coral {
+      background: color-mix(in srgb, var(--coral) 10%, transparent);
+      color: var(--coral);
+      border-color: color-mix(in srgb, var(--coral) 35%, transparent);
+    }
+
+    .tag-muted {
+      background: transparent;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 36px;
+      border-top: 1px solid var(--line-soft);
+      flex-shrink: 0;
+    }
+
+    .navbtn {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .navbtn:hover {
+      background: var(--panel-2);
+    }
+
+    .navbtn:disabled {
+      opacity: .35;
+      cursor: default;
+    }
+
+    .navbtn.locked {
+      opacity: .7;
+    }
+
+    .navbtn.shake {
+      animation: shake .35s ease;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translateX(-1px); }
+      20%, 80% { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+
+    .navbtn:focus-visible,
+    button:focus-visible,
+    .choice:focus-visible,
+    .qc-option:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      max-width: 44vw;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--line);
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: all .2s ease;
+    }
+
+    .dot.on {
+      background: var(--amber);
+      width: 16px;
+      border-radius: 4px;
+    }
+
+    .dot.passed-dot {
+      background: var(--mint);
+    }
+
+    .mobile-nav-label {
+      display: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .row {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+    }
+
+    code,
+    .mono-code,
+    p code,
+    li code,
+    span.mono:not(.range-val) {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.88em;
+      background: color-mix(in srgb, var(--amber) 15%, var(--panel));
+      color: var(--amber);
+      border: 1px solid color-mix(in srgb, var(--amber) 34%, transparent);
+      padding: 1.5px 6.5px;
+      border-radius: 5px;
+      font-weight: 500;
+      letter-spacing: -0.2px;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1.3;
+      margin: 0 1.5px;
+    }
+
+    pre code,
+    pre.snippet code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+      font-weight: normal;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .two-col-gap {
+      display: flex;
+      gap: 44px;
+      flex-wrap: wrap;
+    }
+
+    .cpmk {
+      margin-top: 24px;
+      display: flex;
+      gap: 26px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .cpmk b {
+      color: var(--mint);
+      display: block;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .credit-line {
+      margin-top: 26px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .credit-line b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .agenda-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0 36px;
+    }
+
+    .agenda-list li {
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .agenda-list .num {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--amber);
+      font-size: 13px;
+      width: 22px;
+    }
+
+    .agenda-list .txt {
+      font-size: 14px;
+    }
+
+    .agenda-list .txt small {
+      display: block;
+      color: var(--muted);
+      font-size: 11.5px;
+      margin-top: 1px;
+    }
+
+    .intro-layout {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .intro-text {
+      flex: 1.35;
+      min-width: 300px;
+    }
+
+    .intro-visual {
+      flex: 1;
+      min-width: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-visual svg {
+      width: 100%;
+      max-width: 230px;
+      height: auto;
+    }
+
+    .key-points {
+      list-style: none;
+      margin: 14px 0 0;
+      padding: 0;
+      max-width: 66ch;
+    }
+
+    .key-points li {
+      position: relative;
+      padding: 4px 0 4px 18px;
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .key-points li:before {
+      content: "–";
+      position: absolute;
+      left: 0;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .ic-amber {
+      stroke: var(--amber);
+      fill: none;
+    }
+
+    .ic-coral {
+      stroke: var(--coral);
+      fill: none;
+    }
+
+    .ic-mint {
+      stroke: var(--mint);
+      fill: none;
+    }
+
+    .ic-line {
+      stroke: var(--line);
+      fill: none;
+    }
+
+    .ic-fill-amber {
+      fill: var(--amber);
+    }
+
+    .ic-fill-coral {
+      fill: var(--coral);
+    }
+
+    .ic-fill-mint {
+      fill: var(--mint);
+    }
+
+    .ic-fill-soft {
+      fill: var(--surface);
+      stroke: var(--line);
+    }
+
+    .ic-text {
+      fill: var(--text);
+      stroke: var(--text);
+    }
+
+    .ic-muted {
+      fill: var(--muted);
+      stroke: none;
+    }
+
+    .ic-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+
+    .control-group label {
+      display: block;
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .choice {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 12px;
+      padding: 6px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Mono';
+      transition: all .15s ease;
+    }
+
+    .choice.on {
+      background: var(--amber);
+      color: var(--on-text);
+      border-color: var(--amber);
+      font-weight: 500;
+    }
+
+    .example-layout {
+      display: grid;
+      grid-template-columns: 210px 1fr 1fr;
+      gap: 22px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .example-col-label {
+      font-family: 'IBM Plex Mono';
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .ex-controls {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-panel {
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'IBM Plex Mono';
+      font-size: 12.5px;
+      line-height: 1.8;
+      overflow: auto;
+      height: calc(100% - 24px);
+    }
+
+    .cs-block {
+      margin-bottom: 10px;
+    }
+
+    .cs-sel {
+      color: #EAF2F6;
+    }
+
+    .cs-line {
+      padding-left: 0;
+    }
+
+    .cs-line.cs-hl {
+      background: rgba(242, 169, 59, 0.18);
+      border-radius: 4px;
+      margin: 0 -6px;
+      padding: 2px 6px;
+    }
+
+    .cs-kw {
+      color: #7FD9BB;
+    }
+
+    .cs-val {
+      color: #F2B25E;
+    }
+
+    .cs-com {
+      color: #6C8AA1;
+      font-style: italic;
+    }
+
+    .cs-fn {
+      color: #8FC7FF;
+    }
+
+    .console-line {
+      padding: 2px 0;
+      white-space: pre-wrap;
+    }
+
+    .console-line:before {
+      content: "› ";
+      color: #4F7089;
+    }
+
+    .console-out {
+      color: #EAF2F6;
+    }
+
+    .console-error {
+      color: #FF8A75;
+    }
+
+    .console-error:before {
+      content: "✕ ";
+      color: #FF8A75;
+    }
+
+    .console-value {
+      color: #F2B25E;
+    }
+
+    .console-good {
+      color: #7FD9BB;
+    }
+
+    .ex-result {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      height: calc(100% - 24px);
+    }
+
+    @media (max-width:900px) {
+      .example-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .code-panel {
+        height: auto;
+      }
+    }
+
+    .pattern-card {
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--panel);
+    }
+
+    .pattern-title {
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      color: var(--mint);
+      margin-bottom: 10px;
+    }
+
+    pre.snippet {
+      margin: 10px 0 0;
+      white-space: pre-wrap;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--panel-2);
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+
+    .challenge-mock {
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'IBM Plex Mono';
+      font-size: 12.5px;
+      color: #EAF2F6;
+      line-height: 1.7;
+    }
+
+    /* Step by Step Guide Card for Challenge */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .step-card {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .step-num {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--amber);
+      background: color-mix(in srgb, var(--amber) 15%, transparent);
+      border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+      padding: 1.5px 7px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+
+    .step-card h3 {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .step-card p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .checklist {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .checklist li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 6px 0;
+      font-size: 14px;
+    }
+
+    .checklist li:before {
+      content: "-";
+      color: var(--amber);
+      font-family: 'IBM Plex Mono';
+      font-weight: 600;
+    }
+
+    /* Live Calculator Demo Box */
+    .calc-tester {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .calc-inputs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .calc-input {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono';
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      width: 80px;
+    }
+
+    .calc-select {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--amber);
+      font-family: 'IBM Plex Mono';
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .calc-btn {
+      background: var(--amber);
+      color: var(--on-text);
+      border: none;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity .15s ease;
+    }
+
+    .calc-btn:hover {
+      opacity: .9;
+    }
+
+    .calc-out-box {
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'IBM Plex Mono';
+      font-size: 12px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+    }
+
+    .qc-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 600px;
+    }
+
+    .qc-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans';
+      font-size: 15px;
+      transition: background .15s ease, border-color .15s ease;
+    }
+
+    .qc-option:hover {
+      background: var(--panel-2);
+    }
+
+    .qc-option.correct {
+      background: color-mix(in srgb, var(--mint) 15%, transparent);
+      border-color: var(--mint);
+    }
+
+    .qc-option.wrong {
+      background: color-mix(in srgb, var(--coral) 15%, transparent);
+      border-color: var(--coral);
+    }
+
+    .qc-option.locked {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .qc-feedback {
+      margin-top: 16px;
+      font-size: 14px;
+      min-height: 20px;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .qc-feedback.good {
+      color: var(--mint);
+    }
+
+    .qc-feedback.bad {
+      color: var(--coral);
+    }
+
+    @media (max-width:760px) {
+      .slide {
+        padding: 24px 18px 18px;
+        justify-content: flex-start;
+      }
+
+      .topbar,
+      .navbar {
+        padding: 12px 16px;
+      }
+
+      .topbar .crumb {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 48vw;
+      }
+
+      .row,
+      .two-col-gap {
+        gap: 16px;
+      }
+
+      .dots {
+        display: none;
+      }
+
+      .mobile-nav-label {
+        display: block;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+
+    /* ================= Minggu 5 additions: live preview, console, live coding lab ================= */
+    .counter { font-family: 'IBM Plex Mono', monospace; }
+
+    .lab-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      border: 1px solid color-mix(in srgb, var(--mint) 45%, transparent);
+      color: var(--mint);
+      background: color-mix(in srgb, var(--mint) 10%, transparent);
+      white-space: nowrap;
+    }
+
+    /* highlight tokens (shared by code panels and editor) */
+    .tk-kw { color: #7FD9BB; }
+    .tk-str { color: #F2B25E; }
+    .tk-num { color: #F2B25E; }
+    .tk-com { color: #6C8AA1; font-style: italic; }
+    .tk-fn { color: #8FC7FF; }
+    .tk-tag { color: #FF9E80; }
+    .tk-attr { color: #8FC7FF; }
+    .tk-punc { color: #8FB2C8; }
+
+    .code-panel pre.hl-code {
+      margin: 0;
+      font: inherit;
+      font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre;
+      color: #EAF2F6;
+    }
+    .code-panel .ln { display: block; padding: 0 6px; margin: 0 -6px; border-radius: 4px; min-height: 1.8em; }
+    .code-panel .ln.cs-hl { background: rgba(242, 169, 59, 0.18); }
+
+    /* result column: browser mock + console */
+    .result-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+      height: calc(100% - 24px);
+    }
+    .browser {
+      flex: 1;
+      min-height: 170px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #FFFFFF;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+    }
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #E7EDF2;
+      border-bottom: 1px solid #CBD7E0;
+      flex-shrink: 0;
+    }
+    .bdot { width: 9px; height: 9px; border-radius: 50%; background: #C6D2DB; }
+    .bdot:nth-child(1) { background: #E8654A; }
+    .bdot:nth-child(2) { background: #F2A93B; }
+    .bdot:nth-child(3) { background: #5FC7A3; }
+    .burl {
+      flex: 1;
+      margin-left: 6px;
+      background: #FFFFFF;
+      border: 1px solid #D3DEE6;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: #5D7A91;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brun {
+      background: transparent;
+      border: 1px solid #C6D2DB;
+      color: #3C5A70;
+      border-radius: 5px;
+      font-size: 12px;
+      padding: 1px 8px;
+      cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .brun:hover { background: #FFFFFF; }
+    .browser-frame { flex: 1; width: 100%; border: 0; background: #FFFFFF; min-height: 140px; }
+
+    .console-box {
+      height: 138px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .console-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 12px;
+      border-bottom: 1px solid rgba(74, 144, 184, 0.22);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: #8FB2C8;
+      flex-shrink: 0;
+    }
+    .console-head button {
+      background: transparent;
+      border: 1px solid #3C6E8F;
+      color: #8FB2C8;
+      border-radius: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      padding: 1px 7px;
+      cursor: pointer;
+    }
+    .console-body {
+      flex: 1;
+      overflow: auto;
+      padding: 6px 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #EAF2F6;
+    }
+    .console-body .console-line { border-bottom: 1px solid rgba(74, 144, 184, 0.10); }
+    .console-warn { color: #F2C66D; }
+    .console-warn:before { content: "⚠ " !important; color: #F2C66D !important; }
+    .console-sys { color: #6C8AA1; font-style: italic; }
+    .console-sys:before { content: "· " !important; }
+    .c-str { color: #EAF2F6; }
+    .c-val { color: #F2B25E; }
+    .c-el { color: #FF9E80; }
+    .c-muted { color: #8FB2C8; }
+    .console-empty { color: #4F7089; font-style: italic; }
+
+    .hint-line {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .hint-line b { color: var(--amber); font-weight: 600; }
+
+    /* ================= Live Coding Lab ================= */
+    .slide.lab-slide {
+      justify-content: flex-start;
+      padding: 20px 36px 16px;
+    }
+    .lab-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .lab-head .tag { margin-bottom: 0; }
+    .lab-head h2.sub { margin: 0; }
+    .lab-layout {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1.12fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+    .lab-task {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 14px 15px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+    .lab-task p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text); }
+    .lab-task ol {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .lab-task ol li { margin-bottom: 5px; }
+    .lab-task ol li b { color: var(--text); font-weight: 600; }
+    .lab-hint {
+      font-size: 12px;
+      color: var(--muted);
+      border-left: 2px solid var(--amber);
+      padding: 2px 0 2px 10px;
+      line-height: 1.5;
+    }
+    .lab-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lab-btn {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background .15s ease, opacity .15s ease;
+    }
+    .lab-btn:hover { background: var(--surface); }
+    .lab-btn.primary {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--on-text);
+      font-weight: 600;
+    }
+    .lab-btn.primary:hover { opacity: .9; }
+    .lab-btn.check {
+      background: color-mix(in srgb, var(--mint) 18%, var(--panel));
+      border-color: var(--mint);
+      color: var(--mint);
+      font-weight: 600;
+    }
+    .lab-result { list-style: none; margin: 0; padding: 0; font-size: 12.5px; line-height: 1.45; }
+    .lab-result li { padding: 3px 0 3px 20px; position: relative; }
+    .lab-result li.ok { color: var(--mint); }
+    .lab-result li.no { color: var(--coral); }
+    .lab-result li.ok:before { content: "✓"; position: absolute; left: 2px; font-weight: 700; }
+    .lab-result li.no:before { content: "✕"; position: absolute; left: 2px; font-weight: 700; }
+    .lab-pass-banner {
+      display: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--mint);
+      border: 1px solid var(--mint);
+      background: color-mix(in srgb, var(--mint) 12%, transparent);
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+    .lab-slide.lab-passed .lab-pass-banner { display: block; }
+
+    .editor-col { display: flex; flex-direction: column; min-height: 0; gap: 8px; }
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .ed-tab {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      padding: 4px 11px;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+    }
+    .ed-tab.on { background: #0A1B2C; color: #EAF2F6; border-color: #3C6E8F; }
+    .editor-toolbar .spacer { flex: 1; }
+    .autorun {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .autorun input { accent-color: var(--amber); }
+    .editor {
+      position: relative;
+      flex: 1;
+      min-height: 240px;
+      background: #0A1B2C;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .ed-hl, .ed-ta {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 12px 14px;
+      border: 0;
+      font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      letter-spacing: 0;
+      tab-size: 2;
+      white-space: pre;
+      word-wrap: normal;
+      overflow: auto;
+      box-sizing: border-box;
+    }
+    .ed-hl { color: #EAF2F6; pointer-events: none; overflow: hidden; }
+    .ed-ta {
+      z-index: 1;
+      resize: none;
+      outline: none;
+      background: transparent;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      caret-color: #F2A93B;
+    }
+    .ed-ta::selection { background: rgba(242, 169, 59, .32); -webkit-text-fill-color: transparent; }
+    .editor-foot {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+    .editor-foot kbd {
+      font-family: inherit;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 0 4px;
+      background: var(--panel);
+    }
+    .lab-layout > .lab-preview { display: flex; flex-direction: column; min-height: 0; }
+    .lab-slide .result-col { flex: 1; height: auto; min-height: 0; }
+    .lab-slide .browser { min-height: 200px; }
+    .lab-slide .console-box { height: 150px; }
+
+    /* how-to slide */
+    .howto-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      max-width: 1100px;
+    }
+
+    /* challenge demo */
+    .challenge-demo {
+      height: 330px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .req-list { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+    .req-list li { padding: 5px 0 5px 22px; position: relative; color: var(--muted); line-height: 1.45; border-bottom: 1px solid var(--line-soft); }
+    .req-list li b { color: var(--text); font-weight: 600; }
+    .req-list li:before {
+      content: attr(data-n);
+      position: absolute;
+      left: 0;
+      top: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--amber);
+    }
+
+    @media (max-width: 1100px) {
+      .lab-layout { flex: none; grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(460px, 1fr); }
+      .lab-task { grid-column: 1 / -1; }
+    }
+    .example-layout > div { min-width: 0; }
+    @media (max-width: 900px) {
+      .example-layout { grid-template-columns: minmax(0, 1fr); }
+      .result-col { height: auto; }
+      .browser { min-height: 220px; }
+      .lab-layout { display: flex; flex-direction: column; flex: none; }
+      .slide.lab-slide { padding: 20px 16px 16px; }
+      .editor { flex: none; height: 320px; min-height: 0; }
+      .lab-slide .browser { flex: none; height: 260px; }
+    }
+    @media (max-width: 760px) {
+      .lab-badge { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="ic-text" />
+      </marker>
+      <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-opacity="0.18" />
+      </filter>
+    </defs>
+  </svg>
+  <div class="grid-bg"></div>
+  <div class="deck">
+    <div class="topbar">
+      <div class="crumb">Pemrograman Web · ET234305 — <b>Minggu 5: DOM Manipulation &amp; Event Handling</b></div>
+      <div class="topbar-right">
+        <span class="lab-badge" id="labBadge" title="Live Coding Lab yang lolos auto-check">Lab ✓ 0/11</span>
+        <button class="theme-toggle" id="fsToggle" title="Mode Layar Penuh (F)"><svg width="13" height="13"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+          </svg><span>Layar Penuh</span></button>
+        <button class="theme-toggle" id="themeToggle"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg><span>Light</span></button>
+        <div class="counter"><span id="curNum">1</span> / <span id="totNum">1</span></div>
+      </div>
+    </div>
+    <div class="slides" id="slides"></div>
+    <div class="navbar">
+      <button class="navbtn" id="prevBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          style="margin-right:6px; vertical-align:-1px;">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>Sebelumnya</button>
+      <div class="dots" id="dots"></div>
+      <div class="mobile-nav-label" id="mobileProgress">Slide 1</div>
+      <button class="navbtn" id="nextBtn">Berikutnya<svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          style="margin-left:6px; vertical-align:-1px;">
+          <polyline points="9 18 15 12 9 6" />
+        </svg></button>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       Kode sumber contoh & lab disimpan sebagai teks mentah di bawah ini.
+       Dosen bisa mengedit langsung tanpa perlu escape string JavaScript.
+       ===================================================================== -->
+
+  <!-- ---------- 1. DOM tree ---------- -->
+  <script type="text/plain" data-k="ex-domtree-html">
+<div class="kartu" id="profil">
+  <h1>Profil Mahasiswa</h1>
+  <p>Departemen Teknologi Informasi</p>
+  <ul id="matkul">
+    <li>Pemrograman Web</li>
+    <li>Basis Data</li>
+    <li>Jaringan Komputer</li>
+  </ul>
+</div>
+  </script>
+  <script type="text/plain" data-k="lab-domtree-html">
+<div class="kartu" id="profil">
+  <h1>Profil Mahasiswa</h1>
+  <p>Departemen Teknologi Informasi</p>
+  <ul id="matkul">
+    <li>Pemrograman Web</li>
+    <li>Basis Data</li>
+    <li>Jaringan Komputer</li>
+  </ul>
+</div>
+
+<style>
+  .aktif { background: #FFF1D6; font-weight: 600; border-radius: 4px; }
+  .kartu-aktif { border-color: #F2A93B; box-shadow: 0 0 0 3px rgba(242,169,59,.3); }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-domtree-js">
+// Titik awal: SATU-SATUNYA selector yang boleh dipakai
+const daftar = document.querySelector("#matkul");
+console.log(daftar);
+
+// TODO 1: dari `daftar`, ambil <li> kedua lewat navigasi DOM
+//         lalu beri class "aktif"  → el.classList.add("aktif")
+
+
+// TODO 2: dari `daftar`, naik ke div pembungkus (#profil)
+//         lalu beri class "kartu-aktif"
+
+  </script>
+  <script type="text/plain" data-k="lab-domtree-sol">
+const daftar = document.querySelector("#matkul");
+console.log(daftar);
+
+const liKedua = daftar.children[1];          // atau daftar.firstElementChild.nextElementSibling
+liKedua.classList.add("aktif");
+
+const pembungkus = daftar.parentElement;     // naik satu tingkat
+pembungkus.classList.add("kartu-aktif");
+  </script>
+  <script type="text/plain" data-k="lab-domtree-check">
+const lis = $$("#matkul li");
+t(lis[1] && lis[1].classList.contains("aktif"), '<li> kedua ("Basis Data") punya class "aktif"');
+t($$(".aktif").length === 1, 'Hanya satu elemen yang punya class "aktif"');
+t($("#profil").classList.contains("kartu-aktif"), 'div#profil punya class "kartu-aktif"');
+t((__SRC.match(/querySelector|getElementById|getElementsBy/g) || []).length <= 1, "Hanya memakai SATU selector — sisanya navigasi DOM");
+  </script>
+
+  <!-- ---------- 2. Selecting ---------- -->
+  <script type="text/plain" data-k="ex-selecting-html">
+<h3 style="margin:0 0 8px">Katalog ATK Koperasi</h3>
+<ul id="produk" class="daftar">
+  <li class="item">Buku Tulis <span class="harga">Rp 5.000</span></li>
+  <li class="item promo">Pulpen Gel <span class="harga">Rp 12.000</span></li>
+  <li class="item">Stabilo <span class="harga">Rp 9.000</span></li>
+  <li class="item promo">Map Plastik <span class="harga">Rp 3.500</span></li>
+</ul>
+<style>
+  .daftar { list-style: none; padding: 0; margin: 0; }
+  .daftar li { display: flex; justify-content: space-between; padding: 7px 10px;
+               border: 1px solid #d7e1e8; border-radius: 6px; margin-bottom: 6px; }
+  .harga { color: #5d7a91; font-family: monospace; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-selecting-html">
+<h3 style="margin:0 0 8px">Katalog ATK Koperasi</h3>
+<ul id="produk" class="daftar">
+  <li class="item">Buku Tulis <span class="harga">Rp 5.000</span></li>
+  <li class="item promo">Pulpen Gel <span class="harga">Rp 12.000</span></li>
+  <li class="item">Stabilo <span class="harga">Rp 9.000</span></li>
+  <li class="item promo">Map Plastik <span class="harga">Rp 3.500</span></li>
+</ul>
+<style>
+  .daftar { list-style: none; padding: 0; margin: 0; }
+  .daftar li { display: flex; justify-content: space-between; padding: 7px 10px;
+               border: 1px solid #d7e1e8; border-radius: 6px; margin-bottom: 6px; }
+  .harga { color: #5d7a91; font-family: monospace; }
+  .sorot { background: #FFF1D6; color: #8A4B00; padding: 0 5px; border-radius: 4px; }
+  .habis { opacity: .45; text-decoration: line-through; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-selecting-js">
+// TODO 1: pilih SEMUA elemen .harga, lalu beri class "sorot" ke masing-masing
+//         (ingat: querySelectorAll → NodeList → bisa .forEach)
+
+
+// TODO 2: tampilkan jumlah .item ke console
+
+
+// TODO 3: dengan SATU querySelector berselector CSS, pilih <li> TERAKHIR
+//         di #produk lalu beri class "habis"  (petunjuk: :last-child)
+
+  </script>
+  <script type="text/plain" data-k="lab-selecting-sol">
+const semuaHarga = document.querySelectorAll(".harga");
+semuaHarga.forEach(function (el) {
+  el.classList.add("sorot");
+});
+
+const items = document.querySelectorAll(".item");
+console.log("Jumlah item:", items.length);
+
+document.querySelector("#produk li:last-child").classList.add("habis");
+  </script>
+  <script type="text/plain" data-k="lab-selecting-check">
+const h = $$(".harga");
+t(h.length === 4 && h.every(function (el) { return el.classList.contains("sorot"); }), 'Keempat .harga punya class "sorot"');
+t(/querySelectorAll/.test(__SRC), "Memakai querySelectorAll");
+t(__LOGS.some(function (l) { return /(^|\D)4(\D|$)/.test(l); }), "Console menampilkan jumlah item (4)");
+const li = $$("#produk li");
+t(li[3].classList.contains("habis") && $$(".habis").length === 1, 'Hanya <li> terakhir yang punya class "habis"');
+  </script>
+
+  <!-- ---------- 3. Content ---------- -->
+  <script type="text/plain" data-k="ex-content-html">
+<div id="kotak" class="kartu">Teks awal di dalam #kotak</div>
+<p style="font-size:12px;color:#5d7a91">Preview ini = DOM setelah kode dijalankan.</p>
+  </script>
+  <script type="text/plain" data-k="lab-content-html">
+<div class="kartu">
+  <h3 style="margin:0 0 8px">Kartu Mahasiswa</h3>
+  <p>Nama: <strong id="nama">—</strong></p>
+  <p>NRP: <code id="nrp">—</code></p>
+  <p>Status: <span id="status">—</span></p>
+  <p>Komentar: <em id="komentar">—</em></p>
+</div>
+<style>
+  p { margin: 6px 0; }
+  .badge { background: #1F7A5C; color: #fff; border-radius: 10px; padding: 1px 9px; font-size: 12px; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-content-js">
+const mhs = {
+  nama: "Rani Kusuma",
+  nrp: "5027241001",
+  komentar: "<b>Materi DOM seru!</b> <img src=x>"
+};
+
+// TODO 1: isi #nama dan #nrp memakai textContent
+
+
+// TODO 2: isi #status dengan badge  <span class="badge">Aktif</span>
+//         (di sini kita MEMANG ingin tag ter-render)
+
+
+// TODO 3: tampilkan mhs.komentar APA ADANYA — tag di dalamnya
+//         tidak boleh ikut ter-render menjadi HTML
+
+  </script>
+  <script type="text/plain" data-k="lab-content-sol">
+const mhs = {
+  nama: "Rani Kusuma",
+  nrp: "5027241001",
+  komentar: "<b>Materi DOM seru!</b> <img src=x>"
+};
+
+document.querySelector("#nama").textContent = mhs.nama;
+document.querySelector("#nrp").textContent = mhs.nrp;
+
+// string ini kita tulis sendiri (bukan dari user) → innerHTML aman
+document.querySelector("#status").innerHTML = '<span class="badge">Aktif</span>';
+
+// isi dari user → textContent: ditampilkan sebagai teks, bukan HTML
+document.querySelector("#komentar").textContent = mhs.komentar;
+  </script>
+  <script type="text/plain" data-k="lab-content-check">
+t($("#nama").textContent.trim() === "Rani Kusuma", "#nama berisi nama mahasiswa");
+t($("#nrp").textContent.trim() === "5027241001", "#nrp berisi NRP");
+const b = $("#status .badge");
+t(b && b.textContent.trim() === "Aktif", '#status berisi <span class="badge">Aktif</span>');
+const k = $("#komentar");
+t(k.children.length === 0 && k.textContent.indexOf("<b>") !== -1, "Komentar tampil apa adanya (tag tidak ter-render)");
+  </script>
+
+  <!-- ---------- 4. Styling, classList, atribut ---------- -->
+  <script type="text/plain" data-k="ex-styling-html">
+<div class="kartu" id="kartu" data-status="draft">
+  <h3 style="margin:0 0 6px">Laporan Praktikum 5</h3>
+  <p style="margin:0 0 10px">Status: <span id="status">draft</span></p>
+  <button id="kirim">Kirim Laporan</button>
+</div>
+<style>
+  .kartu { transition: all .3s; }
+  .kartu.gelap { background: #132A3E; color: #EAF2F6; border-color: #132A3E; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-styling-html">
+<div class="app">
+  <h3 style="margin:0 0 6px">Pengaturan Tampilan</h3>
+  <p>Mode saat ini: <b id="mode">terang</b></p>
+  <button id="simpan">Simpan Pengaturan</button>
+</div>
+<style>
+  body { transition: background .3s, color .3s; }
+  body.gelap { background: #0E2438; color: #EAF2F6; }
+  body.gelap .app { border-color: #3C6E8F; }
+  .app { border: 1px solid #d7e1e8; border-radius: 8px; padding: 12px 14px; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-styling-js">
+// Target: aktifkan "mode gelap" TANPA menulis warna di JavaScript.
+// Warnanya sudah disiapkan di CSS (lihat tab HTML → body.gelap).
+
+// TODO 1: tambahkan class "gelap" ke <body>  (document.body)
+
+
+// TODO 2: beri atribut data-tema="gelap" pada <html>
+//         (document.documentElement) — pakai dataset
+
+
+// TODO 3: ubah teks #mode menjadi "gelap"
+
+
+// TODO 4: nonaktifkan tombol #simpan
+
+  </script>
+  <script type="text/plain" data-k="lab-styling-sol">
+document.body.classList.add("gelap");
+document.documentElement.dataset.tema = "gelap";
+document.querySelector("#mode").textContent = "gelap";
+document.querySelector("#simpan").disabled = true;   // atau setAttribute("disabled", "")
+  </script>
+  <script type="text/plain" data-k="lab-styling-check">
+t(document.body.classList.contains("gelap"), '<body> punya class "gelap"');
+t(!document.body.getAttribute("style"), "Tidak memakai inline style pada <body> (pakai classList)");
+t(document.documentElement.dataset.tema === "gelap", '<html> punya atribut data-tema="gelap"');
+t($("#mode").textContent.trim() === "gelap", '#mode bertuliskan "gelap"');
+t($("#simpan").disabled === true, "Tombol #simpan nonaktif (disabled)");
+  </script>
+
+  <!-- ---------- 5. Create / insert / remove ---------- -->
+  <script type="text/plain" data-k="ex-create-html">
+<h3 style="margin:0 0 6px">Antrean Konsultasi Dosen</h3>
+<ol id="antrean">
+  <li>Budi</li>
+  <li>Sari</li>
+  <li>Wulan</li>
+</ol>
+<style>
+  #antrean li { padding: 3px 0; }
+  .baru { color: #1F7A5C; font-weight: 600; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-create-html">
+<div class="kartu">
+  <h3 style="margin:0 0 6px">Mata Kuliah Semester 3</h3>
+  <ul id="daftar">
+    <li class="placeholder">Belum ada data…</li>
+  </ul>
+  <p>Jumlah: <b id="jumlah">0</b></p>
+</div>
+<style>
+  .placeholder { color: #8fa5b5; font-style: italic; }
+  #daftar li { padding: 2px 0; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-create-js">
+const matkul = ["Pemrograman Web", "Basis Data", "Jaringan Komputer", "Statistika"];
+const daftar = document.querySelector("#daftar");
+
+// TODO 1: hapus <li class="placeholder">
+
+
+// TODO 2: untuk SETIAP item di matkul (forEach — minggu 4!):
+//         buat <li> dengan document.createElement, isi teksnya,
+//         lalu masukkan ke #daftar
+
+
+// TODO 3: tulis jumlah mata kuliah ke #jumlah
+
+  </script>
+  <script type="text/plain" data-k="lab-create-sol">
+const matkul = ["Pemrograman Web", "Basis Data", "Jaringan Komputer", "Statistika"];
+const daftar = document.querySelector("#daftar");
+
+daftar.querySelector(".placeholder").remove();
+
+matkul.forEach(function (nama) {
+  const li = document.createElement("li");
+  li.textContent = nama;
+  daftar.append(li);
+});
+
+document.querySelector("#jumlah").textContent = matkul.length;
+  </script>
+  <script type="text/plain" data-k="lab-create-check">
+const li = $$("#daftar li");
+t(!$(".placeholder"), "Placeholder sudah dihapus");
+t(li.length === 4, "#daftar berisi 4 <li>");
+t(li.map(function (x) { return x.textContent.trim(); }).join("|") === "Pemrograman Web|Basis Data|Jaringan Komputer|Statistika", "Urutan & teks sesuai array matkul");
+t(/createElement/.test(__SRC), "Memakai document.createElement");
+t($("#jumlah").textContent.trim() === "4", "#jumlah menampilkan 4");
+  </script>
+
+  <!-- ---------- 6. addEventListener ---------- -->
+  <script type="text/plain" data-k="ex-listener-html">
+<div class="kartu" style="text-align:center">
+  <p style="margin:0 0 4px;color:#5d7a91;font-size:13px">Jumlah event tertangkap</p>
+  <div id="angka" style="font-size:40px;font-weight:700">0</div>
+  <button id="tombol" style="margin-top:8px">Interaksi dengan saya</button>
+</div>
+  </script>
+  <script type="text/plain" data-k="lab-listener-html">
+<div class="kartu" style="text-align:center">
+  <h3 style="margin:0 0 4px">Penghitung Kehadiran</h3>
+  <div id="angka" style="font-size:44px;font-weight:700;margin:6px 0">0</div>
+  <button id="kurang">− Kurang</button>
+  <button id="tambah">+ Tambah</button>
+  <button id="reset">Reset</button>
+</div>
+  </script>
+  <script type="text/plain" data-k="lab-listener-js">
+const angka = document.querySelector("#angka");
+let nilai = 0;
+
+function tampilkan() {
+  angka.textContent = nilai;
+}
+
+// TODO 1: klik #tambah → nilai bertambah 1, lalu tampilkan()
+
+
+// TODO 2: klik #kurang → nilai berkurang 1, TAPI tidak boleh di bawah 0
+
+
+// TODO 3: klik #reset → nilai kembali 0
+
+  </script>
+  <script type="text/plain" data-k="lab-listener-sol">
+const angka = document.querySelector("#angka");
+let nilai = 0;
+
+function tampilkan() {
+  angka.textContent = nilai;
+}
+
+document.querySelector("#tambah").addEventListener("click", function () {
+  nilai++;
+  tampilkan();
+});
+
+document.querySelector("#kurang").addEventListener("click", function () {
+  if (nilai > 0) nilai--;
+  tampilkan();
+});
+
+document.querySelector("#reset").addEventListener("click", function () {
+  nilai = 0;
+  tampilkan();
+});
+  </script>
+  <script type="text/plain" data-k="lab-listener-check">
+function a() { return $("#angka").textContent.trim(); }
+for (let i = 0; i < 3; i++) $("#tambah").click();
+t(a() === "3", "Klik Tambah 3× → 3");
+for (let i = 0; i < 5; i++) $("#kurang").click();
+t(a() === "0", "Klik Kurang 5× → berhenti di 0 (tidak negatif)");
+$("#tambah").click(); $("#tambah").click();
+t(a() === "2", "Tambah 2× lagi → 2");
+$("#reset").click();
+t(a() === "0", "Reset → kembali 0");
+  </script>
+
+  <!-- ---------- 7. Event object ---------- -->
+  <script type="text/plain" data-k="ex-eventobj-html">
+<label style="font-size:13px">Ketik sesuatu:
+  <input id="ketik" placeholder="tekan tombol apa saja…">
+</label>
+<div id="kotak" class="kotak">Gerakkan / klik mouse di sini <span id="koordinat">x=–, y=–</span></div>
+<p style="margin:0"><a id="link" href="halaman-lain.html">Buka halaman lain →</a></p>
+<style>
+  .kotak { margin: 10px 0; height: 76px; border: 2px dashed #b7c9d6; border-radius: 8px;
+           display: flex; align-items: center; justify-content: center; flex-direction: column;
+           color: #5d7a91; font-size: 13px; gap: 4px; }
+  #koordinat { font-family: monospace; color: #B8690A; background: #FFF1D6; padding: 1px 6px; border-radius: 4px; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-eventobj-html">
+<div class="kartu">
+  <label for="pesan"><b>Pesan untuk dosen wali</b> (maks 100 karakter)</label>
+  <textarea id="pesan" rows="3" maxlength="100" style="width:100%;margin-top:6px"></textarea>
+  <p style="margin:4px 0;font-size:13px">Sisa karakter: <b id="sisa">100</b> · tekan <kbd>Esc</kbd> untuk mengosongkan</p>
+  <p style="margin:4px 0"><a id="bantuan" href="bantuan.html">Butuh bantuan?</a></p>
+  <p id="info" hidden style="background:#EAF6F1;padding:6px 8px;border-radius:6px;font-size:13px">
+    💡 Pesan dibaca dosen wali dalam 2×24 jam. Hindari menulis password atau data sensitif.
+  </p>
+</div>
+  </script>
+  <script type="text/plain" data-k="lab-eventobj-js">
+const pesan = document.querySelector("#pesan");
+const sisa = document.querySelector("#sisa");
+const bantuan = document.querySelector("#bantuan");
+const info = document.querySelector("#info");
+
+// TODO 1: event "input" pada #pesan → tulis (100 − panjang teks) ke #sisa
+
+
+// TODO 2: event "keydown" pada #pesan → jika e.key === "Escape",
+//         kosongkan textarea dan kembalikan #sisa ke 100
+
+
+// TODO 3: klik #bantuan → cegah pindah halaman (e.preventDefault())
+//         lalu tampilkan #info  (info.hidden = false)
+
+  </script>
+  <script type="text/plain" data-k="lab-eventobj-sol">
+const pesan = document.querySelector("#pesan");
+const sisa = document.querySelector("#sisa");
+const bantuan = document.querySelector("#bantuan");
+const info = document.querySelector("#info");
+
+function perbaruiSisa() {
+  sisa.textContent = 100 - pesan.value.length;
+}
+
+pesan.addEventListener("input", perbaruiSisa);
+
+pesan.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    pesan.value = "";
+    perbaruiSisa();
+  }
+});
+
+bantuan.addEventListener("click", function (e) {
+  e.preventDefault();
+  info.hidden = false;
+});
+  </script>
+  <script type="text/plain" data-k="lab-eventobj-check">
+const ta = $("#pesan");
+ta.value = "Halo Pak";
+ta.dispatchEvent(new Event("input", { bubbles: true }));
+t($("#sisa").textContent.trim() === "92", "Mengetik 8 karakter → sisa 92");
+ta.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+t(ta.value === "", "Tombol Esc mengosongkan textarea");
+t($("#sisa").textContent.trim() === "100", "Setelah Esc, sisa kembali 100");
+const ev = new MouseEvent("click", { bubbles: true, cancelable: true });
+$("#bantuan").dispatchEvent(ev);
+t(ev.defaultPrevented && !ev.__simNav, "Klik #bantuan dicegah dengan e.preventDefault()");
+t($("#info").hidden === false, "#info tampil setelah klik bantuan");
+  </script>
+
+  <!-- ---------- 8. Forms ---------- -->
+  <script type="text/plain" data-k="ex-forms-html">
+<form id="form" class="kartu" novalidate>
+  <h3 style="margin:0 0 8px">Daftar Asisten Praktikum</h3>
+  <label>Nama <input name="nama" placeholder="nama lengkap"></label>
+  <label>Umur <input name="umur" type="number" placeholder="contoh: 19"></label>
+  <button type="submit">Daftar</button>
+  <p id="pesan" class="pesan"></p>
+</form>
+<style>
+  form label { display: block; margin-bottom: 8px; font-size: 13px; }
+  form input { display: block; width: 100%; margin-top: 3px; }
+  .pesan { margin: 8px 0 0; font-weight: 600; color: #1F7A5C; min-height: 1.2em; }
+  .pesan.error { color: #B23A26; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-forms-html">
+<form id="daftar" class="kartu" novalidate>
+  <h3 style="margin:0 0 8px">Registrasi Akun Lab</h3>
+  <label>Nama <input name="nama"></label>
+  <label>Email <input name="email" type="email"></label>
+  <label>Password <input name="password" type="password"></label>
+  <button type="submit">Daftar</button>
+  <ul id="pesan"></ul>
+</form>
+<style>
+  label { display: block; margin-bottom: 8px; font-size: 13px; }
+  input { display: block; width: 100%; margin-top: 3px; }
+  #pesan { margin: 8px 0 0; padding-left: 18px; font-size: 13px; }
+  .error { color: #B23A26; }
+  .sukses { color: #1F7A5C; font-weight: 600; list-style: none; margin-left: -18px; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-forms-js">
+const form = document.querySelector("#daftar");
+const pesan = document.querySelector("#pesan");
+
+form.addEventListener("submit", function (e) {
+  // TODO 1: cegah reload halaman
+
+
+  const nama = form.elements.nama.value.trim();
+  const email = form.elements.email.value.trim();
+  const password = form.elements.password.value;
+  const errors = [];
+
+  // TODO 2: isi array errors:
+  //   - nama kosong            → "Nama wajib diisi"
+  //   - email tanpa "@"        → "Email tidak valid"
+  //   - password < 8 karakter  → "Password minimal 8 karakter"
+
+
+  // TODO 3: kosongkan #pesan, lalu:
+  //   - ada error  → tiap error jadi <li class="error">
+  //   - tidak ada  → satu <li class="sukses">Pendaftaran berhasil, {nama}!</li>
+  //                  lalu form.reset()
+
+});
+  </script>
+  <script type="text/plain" data-k="lab-forms-sol">
+const form = document.querySelector("#daftar");
+const pesan = document.querySelector("#pesan");
+
+function tambahPesan(teks, kelas) {
+  const li = document.createElement("li");
+  li.textContent = teks;
+  li.className = kelas;
+  pesan.append(li);
+}
+
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const nama = form.elements.nama.value.trim();
+  const email = form.elements.email.value.trim();
+  const password = form.elements.password.value;
+  const errors = [];
+
+  if (nama === "") errors.push("Nama wajib diisi");
+  if (!email.includes("@")) errors.push("Email tidak valid");
+  if (password.length < 8) errors.push("Password minimal 8 karakter");
+
+  pesan.innerHTML = "";
+  if (errors.length > 0) {
+    errors.forEach(function (err) { tambahPesan(err, "error"); });
+  } else {
+    tambahPesan(`Pendaftaran berhasil, ${nama}!`, "sukses");
+    form.reset();
+  }
+});
+  </script>
+  <script type="text/plain" data-k="lab-forms-check">
+const f = $("#daftar"), p = $("#pesan");
+function kirim(n, e, pw) {
+  f.elements.nama.value = n; f.elements.email.value = e; f.elements.password.value = pw;
+  const ev = new Event("submit", { bubbles: true, cancelable: true });
+  f.dispatchEvent(ev);
+  return ev;
+}
+const ev = kirim("", "rani.its.ac.id", "123");
+t(ev.defaultPrevented && !ev.__simNav, "Submit dicegah dengan e.preventDefault()");
+t(p.querySelectorAll("li.error").length === 3, 'Semua input salah → 3 <li class="error">');
+kirim("Rani", "rani@its.ac.id", "123");
+t(p.querySelectorAll("li.error").length === 1 && /8/.test(p.textContent), "Hanya password pendek → 1 error (pesan lama dibersihkan)");
+kirim("Rani", "rani@its.ac.id", "rahasia123");
+t(p.querySelectorAll("li.error").length === 0 && /berhasil/i.test(p.textContent) && p.textContent.indexOf("Rani") !== -1, "Data valid → pesan sukses menyebut nama");
+t(f.elements.nama.value === "", "Form di-reset setelah sukses");
+  </script>
+
+  <!-- ---------- 9. Bubbling ---------- -->
+  <script type="text/plain" data-k="ex-bubbling-html">
+<div class="luar box">div.luar
+  <div class="tengah box">div.tengah
+    <button class="dalam">button.dalam — klik saya</button>
+  </div>
+</div>
+<p style="font-size:12px;color:#5d7a91;margin:8px 0 0">Angka oranye = urutan handler dijalankan.</p>
+<style>
+  .box { border: 2px solid #b7c9d6; border-radius: 10px; padding: 10px 14px 14px;
+         font-family: monospace; font-size: 12px; color: #5d7a91; position: relative; transition: background .15s; }
+  .tengah { margin-top: 8px; }
+  .dalam { margin-top: 8px; position: relative; }
+  .kilat { background: #FFE3B0 !important; border-color: #F2A93B; }
+  [data-urut]::after { content: attr(data-urut); position: absolute; top: -10px; right: -10px;
+         background: #F2A93B; color: #0E2438; border-radius: 50%; width: 20px; height: 20px;
+         display: flex; align-items: center; justify-content: center; font: 700 11px system-ui; }
+</style>
+  </script>
+  <script type="text/plain" data-k="ex-bubbling-helper">
+let __urut = 0;
+document.addEventListener("pointerdown", function () {
+  __urut = 0;
+  document.querySelectorAll("[data-urut]").forEach(function (el) { el.removeAttribute("data-urut"); el.classList.remove("kilat"); });
+}, true);
+function kilat(el) {
+  const n = ++__urut;
+  el.dataset.urut = n;
+  setTimeout(function () {
+    el.classList.add("kilat");
+    setTimeout(function () { el.classList.remove("kilat"); }, 320);
+  }, (n - 1) * 380);
+}
+  </script>
+  <script type="text/plain" data-k="lab-bubbling-html">
+<nav class="bar">
+  <div class="dropdown" id="dropdown">
+    <button id="toggle">Menu ▾</button>
+    <ul id="menu" class="menu">
+      <li>Profil</li>
+      <li>Nilai</li>
+      <li>Keluar</li>
+    </ul>
+  </div>
+  <span style="margin-left:auto;color:#5d7a91;font-size:12px">SIAKAD mini</span>
+</nav>
+<p class="area">Klik area kosong halaman untuk menutup menu.</p>
+<style>
+  .bar { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid #d7e1e8; border-radius: 8px; }
+  .dropdown { position: relative; }
+  .menu { display: none; position: absolute; top: 36px; left: 0; list-style: none; margin: 0; padding: 4px;
+          background: #fff; border: 1px solid #d7e1e8; border-radius: 6px;
+          box-shadow: 0 6px 14px rgba(0,0,0,.12); min-width: 130px; }
+  .menu.buka { display: block; }
+  .menu li { padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+  .menu li:hover { background: #EAF0F5; }
+  .area { color: #8fa5b5; font-size: 13px; margin-top: 90px; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-bubbling-js">
+const toggle = document.querySelector("#toggle");
+const menu = document.querySelector("#menu");
+
+toggle.addEventListener("click", function () {
+  menu.classList.toggle("buka");
+  console.log("toggle → buka =", menu.classList.contains("buka"));
+});
+
+// Tutup menu saat klik di mana saja
+document.addEventListener("click", function (e) {
+  menu.classList.remove("buka");
+  console.log("document menutup menu | target:", e.target.id || e.target.tagName);
+});
+
+// 🐞 BUG: klik "Menu ▾" tidak pernah membuka menu. Perhatikan console — kenapa?
+// TODO: perbaiki listener di document supaya:
+//   - klik DI DALAM #dropdown (tombol maupun item menu) TIDAK menutup menu
+//   - klik DI LUAR #dropdown tetap menutup menu
+  </script>
+  <script type="text/plain" data-k="lab-bubbling-sol">
+const toggle = document.querySelector("#toggle");
+const menu = document.querySelector("#menu");
+const dropdown = document.querySelector("#dropdown");
+
+toggle.addEventListener("click", function () {
+  menu.classList.toggle("buka");
+  console.log("toggle → buka =", menu.classList.contains("buka"));
+});
+
+document.addEventListener("click", function (e) {
+  // klik berasal dari dalam dropdown? biarkan saja
+  if (dropdown.contains(e.target)) return;
+  menu.classList.remove("buka");
+  console.log("document menutup menu | target:", e.target.id || e.target.tagName);
+});
+  </script>
+  <script type="text/plain" data-k="lab-bubbling-check">
+const m = $("#menu");
+m.classList.remove("buka");
+$("#toggle").click();
+t(m.classList.contains("buka"), "Klik tombol Menu → menu terbuka");
+m.querySelector("li").click();
+t(m.classList.contains("buka"), "Klik item di dalam menu tidak menutup menu");
+$(".area").click();
+t(!m.classList.contains("buka"), "Klik di luar dropdown → menu tertutup");
+$("#toggle").click(); $("#toggle").click();
+t(!m.classList.contains("buka"), "Klik tombol dua kali → menu tertutup lagi (toggle)");
+  </script>
+
+  <!-- ---------- 10. Delegation ---------- -->
+  <script type="text/plain" data-k="ex-delegation-html">
+<div class="kartu">
+  <h3 style="margin:0 0 6px">Daftar Tugas</h3>
+  <ul id="list">
+    <li>Tugas 1 <button class="hapus">hapus</button></li>
+    <li>Tugas 2 <button class="hapus">hapus</button></li>
+    <li>Tugas 3 <button class="hapus">hapus</button></li>
+  </ul>
+  <button id="tambah">+ Tambah tugas</button>
+</div>
+<style>
+  #list { padding-left: 18px; }
+  #list li { padding: 3px 0; }
+  .hapus { font-size: 11px; padding: 1px 8px; margin-left: 6px; background: #fff; color: #B23A26; border: 1px solid #e3b2a8; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-delegation-html">
+<div class="kartu">
+  <h3 style="margin:0 0 8px">To-Do Praktikum</h3>
+  <div class="baris"><input id="input" placeholder="tugas baru…"><button id="tambah">Tambah</button></div>
+  <ul id="daftar">
+    <li data-id="1"><span class="teks">Baca modul DOM</span> <button class="hapus">✕</button></li>
+    <li data-id="2"><span class="teks">Kerjakan lab 9</span> <button class="hapus">✕</button></li>
+  </ul>
+  <p style="font-size:13px;margin:6px 0 0">Belum selesai: <b id="sisa">2</b> · klik teks untuk menandai selesai</p>
+</div>
+<style>
+  .baris { display: flex; gap: 6px; }
+  .baris input { flex: 1; }
+  #daftar { list-style: none; padding: 0; margin: 6px 0 0; }
+  #daftar li { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px;
+               border: 1px solid #d7e1e8; border-radius: 6px; margin-top: 6px; }
+  .teks { cursor: pointer; }
+  .selesai .teks { text-decoration: line-through; color: #8fa5b5; }
+  .hapus { background: #fff; color: #B23A26; border: 1px solid #e3b2a8; padding: 1px 8px; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-delegation-js">
+const daftar = document.querySelector("#daftar");
+const input = document.querySelector("#input");
+let nextId = 3;
+
+function hitungSisa() {
+  document.querySelector("#sisa").textContent =
+    daftar.querySelectorAll("li:not(.selesai)").length;
+}
+
+document.querySelector("#tambah").addEventListener("click", function () {
+  const teks = input.value.trim();
+  if (!teks) return;
+  const li = document.createElement("li");
+  li.dataset.id = nextId++;
+  li.innerHTML = '<span class="teks"></span> <button class="hapus">✕</button>';
+  li.querySelector(".teks").textContent = teks;   // input user → textContent
+  daftar.append(li);
+  input.value = "";
+  hitungSisa();
+});
+
+// ❌ Listener per tombol — item yang ditambahkan BELAKANGAN tidak ikut!
+document.querySelectorAll(".hapus").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    btn.parentElement.remove();
+    hitungSisa();
+  });
+});
+
+// TODO: ganti blok ❌ di atas dengan SATU listener "click" di #daftar:
+//   - klik .hapus → hapus <li> tersebut
+//   - klik .teks  → toggle class "selesai" pada <li>
+//   - lalu panggil hitungSisa()
+//   Petunjuk: e.target.closest(".hapus") / e.target.closest("li")
+  </script>
+  <script type="text/plain" data-k="lab-delegation-sol">
+const daftar = document.querySelector("#daftar");
+const input = document.querySelector("#input");
+let nextId = 3;
+
+function hitungSisa() {
+  document.querySelector("#sisa").textContent =
+    daftar.querySelectorAll("li:not(.selesai)").length;
+}
+
+document.querySelector("#tambah").addEventListener("click", function () {
+  const teks = input.value.trim();
+  if (!teks) return;
+  const li = document.createElement("li");
+  li.dataset.id = nextId++;
+  li.innerHTML = '<span class="teks"></span> <button class="hapus">✕</button>';
+  li.querySelector(".teks").textContent = teks;
+  daftar.append(li);
+  input.value = "";
+  hitungSisa();
+});
+
+// ✅ Event delegation: satu listener untuk semua item, lama maupun baru
+daftar.addEventListener("click", function (e) {
+  const li = e.target.closest("li");
+  if (!li) return;
+  if (e.target.closest(".hapus")) {
+    li.remove();
+  } else if (e.target.closest(".teks")) {
+    li.classList.toggle("selesai");
+  }
+  hitungSisa();
+});
+  </script>
+  <script type="text/plain" data-k="lab-delegation-check">
+const d = $("#daftar");
+$("#input").value = "Tugas uji otomatis";
+$("#tambah").click();
+const baru = d.lastElementChild;
+t(baru && baru.textContent.indexOf("Tugas uji otomatis") !== -1, "Item baru berhasil ditambahkan");
+baru.querySelector(".teks").click();
+t(baru.classList.contains("selesai"), 'Klik teks item BARU → class "selesai" ter-toggle');
+t($("#sisa").textContent.trim() === "2", "Counter #sisa ikut ter-update");
+baru.querySelector(".teks").click();
+t(!baru.classList.contains("selesai"), "Klik lagi → batal selesai (toggle)");
+baru.querySelector(".hapus").click();
+t(!d.contains(baru), "Klik ✕ pada item BARU → item terhapus");
+const pertama = d.querySelector("li");
+pertama.querySelector(".hapus").click();
+t(!d.contains(pertama) && $("#sisa").textContent.trim() === "1", "Item lama juga bisa dihapus, #sisa jadi 1");
+t(!/querySelectorAll\(\s*["'`]\.hapus/.test(__SRC), "Tidak lagi memasang listener per tombol .hapus");
+  </script>
+
+  <!-- ---------- 11. State → render ---------- -->
+  <script type="text/plain" data-k="ex-render-html">
+<div class="kartu">
+  <h3 style="margin:0 0 6px">Toko Buku Kampus</h3>
+  <ul id="hasil"></ul>
+</div>
+<style>
+  #hasil { list-style: none; padding: 0; margin: 0; }
+  #hasil li { display: flex; justify-content: space-between; padding: 6px 8px; border-bottom: 1px solid #e3eaf0; }
+  #hasil b { font-family: monospace; color: #B8690A; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-render-html">
+<div class="kartu">
+  <h3 style="margin:0 0 8px">Rekap Nilai Praktikum</h3>
+  <div class="filter" id="filter">
+    <button data-filter="semua" class="on">Semua</button>
+    <button data-filter="lulus">Lulus (≥ 60)</button>
+    <button data-filter="gagal">Belum lulus</button>
+  </div>
+  <table>
+    <thead><tr><th>Nama</th><th>Nilai</th></tr></thead>
+    <tbody id="tabel"></tbody>
+  </table>
+  <p id="ringkasan"></p>
+</div>
+<style>
+  .filter { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .filter button { background: #fff; color: #132A3E; border: 1px solid #b7c9d6; }
+  .filter button.on { background: #132A3E; color: #fff; border-color: #132A3E; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e3eaf0; }
+  td.gagal { color: #B23A26; font-weight: 600; }
+  #ringkasan { font-size: 12px; color: #5d7a91; margin: 8px 0 0; }
+</style>
+  </script>
+  <script type="text/plain" data-k="lab-render-js">
+const nilai = [
+  { nama: "Andi", skor: 78 },
+  { nama: "Bunga", skor: 55 },
+  { nama: "Citra", skor: 92 },
+  { nama: "Dimas", skor: 60 },
+  { nama: "Eka", skor: 41 },
+];
+let filterAktif = "semua";   // ← state
+
+function render() {
+  // TODO 1: saring `nilai` sesuai filterAktif
+  //         semua → semua | lulus → skor >= 60 | gagal → skor < 60
+
+  // TODO 2: ubah tiap data jadi <tr><td>nama</td><td>skor</td></tr>
+  //         (<td> skor diberi class "gagal" jika skor < 60) → isi #tabel
+
+  // TODO 3: tulis "Menampilkan X dari 5 mahasiswa" ke #ringkasan
+}
+
+// TODO 4: SATU listener di #filter (delegation). Saat tombol diklik:
+//         ubah filterAktif, pindahkan class "on" ke tombol itu, panggil render()
+
+
+render();
+  </script>
+  <script type="text/plain" data-k="lab-render-sol">
+const nilai = [
+  { nama: "Andi", skor: 78 },
+  { nama: "Bunga", skor: 55 },
+  { nama: "Citra", skor: 92 },
+  { nama: "Dimas", skor: 60 },
+  { nama: "Eka", skor: 41 },
+];
+let filterAktif = "semua";
+
+function render() {
+  const data = nilai.filter(function (m) {
+    if (filterAktif === "lulus") return m.skor >= 60;
+    if (filterAktif === "gagal") return m.skor < 60;
+    return true;
+  });
+
+  document.querySelector("#tabel").innerHTML = data
+    .map(m => `<tr><td>${m.nama}</td><td class="${m.skor < 60 ? "gagal" : ""}">${m.skor}</td></tr>`)
+    .join("");
+
+  document.querySelector("#ringkasan").textContent =
+    `Menampilkan ${data.length} dari ${nilai.length} mahasiswa`;
+}
+
+document.querySelector("#filter").addEventListener("click", function (e) {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  filterAktif = btn.dataset.filter;
+  document.querySelectorAll("#filter button").forEach(b => b.classList.remove("on"));
+  btn.classList.add("on");
+  render();
+});
+
+render();
+  </script>
+  <script type="text/plain" data-k="lab-render-check">
+function rows() { return $$("#tabel tr"); }
+function klik(f) { $('#filter [data-filter="' + f + '"]').click(); }
+t(rows().length === 5, "Awal (Semua) → 5 baris");
+klik("lulus");
+t(rows().length === 3, "Filter Lulus → 3 baris (Andi, Citra, Dimas)");
+t($('#filter [data-filter="lulus"]').classList.contains("on") && $$("#filter .on").length === 1, 'Class "on" pindah ke tombol yang diklik');
+klik("gagal");
+t(rows().length === 2 && $$("#tabel td.gagal").length === 2, 'Filter Belum lulus → 2 baris dengan <td class="gagal">');
+t(/2 dari 5/.test($("#ringkasan").textContent), '#ringkasan: "Menampilkan 2 dari 5 mahasiswa"');
+klik("semua");
+t(rows().length === 5, "Kembali ke Semua → 5 baris");
+  </script>
+
+  <!-- ---------- Challenge: demo aplikasi jadi (tanpa kode) ---------- -->
+  <script type="text/plain" data-k="challenge-html">
+<div class="app">
+  <h3 style="margin:0 0 8px">📋 Task Tracker Kuliah</h3>
+  <form id="form" novalidate>
+    <input name="judul" placeholder="Judul tugas (min. 3 karakter)">
+    <div class="baris">
+      <select name="matkul">
+        <option>Pemrograman Web</option><option>Basis Data</option><option>Struktur Data</option>
+      </select>
+      <input name="deadline" type="date">
+      <button type="submit">Tambah</button>
+    </div>
+    <p id="err" class="err"></p>
+  </form>
+  <div class="filter" id="filter">
+    <button data-f="semua" class="on">Semua</button><button data-f="aktif">Aktif</button><button data-f="selesai">Selesai</button>
+    <span id="counter" class="counter"></span>
+  </div>
+  <ul id="list"></ul>
+</div>
+<style>
+  body { margin: 10px; }
+  .app { font-size: 13px; }
+  #form input[name=judul] { width: 100%; }
+  .baris { display: flex; gap: 6px; margin-top: 6px; }
+  .baris select, .baris input { flex: 1; min-width: 0; }
+  .err { color: #B23A26; margin: 4px 0 0; min-height: 1em; font-size: 12px; }
+  .filter { display: flex; gap: 5px; align-items: center; margin: 6px 0; }
+  .filter button { background: #fff; color: #132A3E; border: 1px solid #b7c9d6; padding: 3px 9px; font-size: 12px; }
+  .filter button.on { background: #132A3E; color: #fff; }
+  .counter { margin-left: auto; color: #5d7a91; font-size: 12px; }
+  #list { list-style: none; padding: 0; margin: 0; }
+  #list li { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid #d7e1e8; border-radius: 6px; margin-bottom: 5px; }
+  #list li.done .judul { text-decoration: line-through; color: #8fa5b5; }
+  .meta { color: #5d7a91; font-size: 11px; }
+  .isi { flex: 1; min-width: 0; }
+  .hapus { background: #fff; color: #B23A26; border: 1px solid #e3b2a8; padding: 1px 7px; }
+  .kosong { color: #8fa5b5; font-style: italic; text-align: center; padding: 10px; }
+</style>
+  </script>
+  <script type="text/plain" data-k="challenge-js">
+(function () {
+  let tugas = [
+    { id: 1, judul: "Lab 10 event delegation", matkul: "Pemrograman Web", deadline: "2026-10-08", selesai: false },
+    { id: 2, judul: "ERD sistem perpustakaan", matkul: "Basis Data", deadline: "2026-10-12", selesai: true }
+  ];
+  let filter = "semua", nextId = 3;
+  const form = document.querySelector("#form"), list = document.querySelector("#list");
+  function render() {
+    const data = tugas.filter(t => filter === "semua" || (filter === "aktif" ? !t.selesai : t.selesai));
+    list.innerHTML = "";
+    if (!data.length) { list.innerHTML = '<li class="kosong">Tidak ada tugas di sini 🎉</li>'; }
+    data.forEach(t => {
+      const li = document.createElement("li");
+      li.dataset.id = t.id;
+      li.className = t.selesai ? "done" : "";
+      li.innerHTML = '<input type="checkbox" class="cek"><div class="isi"><div class="judul"></div><div class="meta"></div></div><button class="hapus">✕</button>';
+      li.querySelector(".cek").checked = t.selesai;
+      li.querySelector(".judul").textContent = t.judul;
+      li.querySelector(".meta").textContent = t.matkul + " · deadline " + t.deadline;
+      list.append(li);
+    });
+    document.querySelector("#counter").textContent = tugas.filter(t => !t.selesai).length + " tugas aktif";
+  }
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const judul = form.elements.judul.value.trim(), deadline = form.elements.deadline.value;
+    const err = document.querySelector("#err");
+    if (judul.length < 3) { err.textContent = "Judul minimal 3 karakter."; return; }
+    if (!deadline) { err.textContent = "Deadline wajib diisi."; return; }
+    err.textContent = "";
+    tugas.push({ id: nextId++, judul, matkul: form.elements.matkul.value, deadline, selesai: false });
+    form.reset();
+    render();
+  });
+  list.addEventListener("click", e => {
+    const li = e.target.closest("li[data-id]"); if (!li) return;
+    const id = Number(li.dataset.id);
+    if (e.target.closest(".hapus")) tugas = tugas.filter(t => t.id !== id);
+    else if (e.target.closest(".cek")) tugas = tugas.map(t => t.id === id ? { ...t, selesai: !t.selesai } : t);
+    else return;
+    render();
+  });
+  document.querySelector("#filter").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    filter = b.dataset.f;
+    document.querySelectorAll("#filter button").forEach(x => x.classList.toggle("on", x === b));
+    render();
+  });
+  render();
+})();
+  </script>
+
+<script>
+(function(){
+
+  /* =====================================================================
+     Utilitas
+     ===================================================================== */
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+  function esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  // Ambil blok teks mentah (script type=text/plain, atribut data-k), buang indentasi umum
+  function block(k){
+    const el = document.querySelector('script[data-k="'+k+'"]');
+    if(!el) return '';
+    const lines = el.textContent.replace(/^\n+/, '').replace(/\s+$/, '').split('\n');
+    let min = Infinity;
+    lines.forEach(function(l){ if(l.trim()){ const m = l.match(/^ */)[0].length; if(m<min) min=m; } });
+    if(!isFinite(min)) min = 0;
+    return lines.map(function(l){ return l.slice(min); }).join('\n');
+  }
+
+  /* =====================================================================
+     Syntax highlighter mini (JS & HTML) — dipakai panel kode & editor
+     ===================================================================== */
+  const JS_RE = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(`(?:\\[\s\S]|[^`\\])*`|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|\b(const|let|var|function|return|if|else|for|of|in|while|do|new|true|false|null|undefined|this|typeof|instanceof|switch|case|break|continue|default|class|try|catch|finally|throw|async|await)\b|(\b\d+(?:\.\d+)?\b)|([A-Za-z_$][\w$]*)(?=\s*\()/g;
+  function hlJS(src){
+    let out = '', last = 0, m;
+    JS_RE.lastIndex = 0;
+    while((m = JS_RE.exec(src))){
+      out += esc(src.slice(last, m.index));
+      const cls = m[1] ? 'tk-com' : m[2] ? 'tk-str' : m[3] ? 'tk-kw' : m[4] ? 'tk-num' : 'tk-fn';
+      out += '<span class="'+cls+'">'+esc(m[0])+'</span>';
+      last = JS_RE.lastIndex;
+    }
+    return out + esc(src.slice(last));
+  }
+  function hlHTML(src){
+    let out = '', last = 0, m;
+    const RE = /<\!--[\s\S]*?-->|<\/?[a-zA-Z][^>]*>/g;   // "<\!" agar parser HTML tidak masuk mode komentar
+    while((m = RE.exec(src))){
+      out += esc(src.slice(last, m.index));
+      if(m[0].startsWith('<' + '!--')) out += '<span class="tk-com">'+esc(m[0])+'</span>';
+      else out += hlTagSafe(m[0]);
+      last = RE.lastIndex;
+    }
+    return out + esc(src.slice(last));
+  }
+  // versi aman: tokenisasi manual isi tag supaya teks di luar token tetap di-escape
+  function hlTagSafe(tag){
+    let out = '', i = 0, m;
+    const RE = /^(<\/?)([\w-]+)/;
+    m = tag.match(RE);
+    if(m){ out += '<span class="tk-punc">'+esc(m[1])+'</span><span class="tk-tag">'+esc(m[2])+'</span>'; i = m[0].length; }
+    const rest = tag.slice(i);
+    const TK = /("[^"]*"|'[^']*')|([\w\-:@]+)(?==)|(\/?>$)/g;
+    let last = 0;
+    while((m = TK.exec(rest))){
+      out += esc(rest.slice(last, m.index));
+      if(m[1]) out += '<span class="tk-str">'+esc(m[1])+'</span>';
+      else if(m[2]) out += '<span class="tk-attr">'+esc(m[2])+'</span>';
+      else out += '<span class="tk-punc">'+esc(m[3])+'</span>';
+      last = TK.lastIndex;
+    }
+    return out + esc(rest.slice(last));
+  }
+
+  /* =====================================================================
+     Sandbox runner: halaman mini di <iframe srcdoc> + console yang ditangkap
+     ===================================================================== */
+  const BASE_CSS = '*{box-sizing:border-box}body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:14px;color:#1d2b36;font-size:14px;line-height:1.45;background:#fff}h1{font-size:20px;margin:0 0 6px}h3{font-size:16px}button{font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid #132A3E;background:#132A3E;color:#fff;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}input,textarea,select{font:inherit;font-size:13px;padding:6px 8px;border:1px solid #b7c9d6;border-radius:6px;background:#fff;color:#1d2b36}.kartu{border:1px solid #d7e1e8;border-radius:10px;padding:12px 14px;background:#fff}code{font-family:"IBM Plex Mono",ui-monospace,monospace;background:#eef3f7;padding:0 4px;border-radius:3px}kbd{border:1px solid #b7c9d6;border-radius:3px;padding:0 4px;font-size:11px}';
+
+  // Fungsi ini TIDAK dijalankan di halaman slide — kodenya disisipkan ke dalam iframe.
+  function PRELUDE(RID, START, NLINES){
+    var P = window.parent;
+    window.__LOGS = [];
+    window.__CHECKING = false;
+    function tag(el){
+      var s = el.tagName.toLowerCase();
+      if(el.id) s += '#' + el.id;
+      if(el.classList && el.classList.length) s += '.' + Array.prototype.join.call(el.classList, '.');
+      return s;
+    }
+    function fmt(v, d){
+      var t = typeof v;
+      if(v === null) return {s:'null', k:'val'};
+      if(t === 'undefined') return {s:'undefined', k:'muted'};
+      if(t === 'string') return d ? {s:JSON.stringify(v), k:'val'} : {s:v, k:'str'};
+      if(t === 'number' || t === 'boolean' || t === 'bigint') return {s:String(v), k:'val'};
+      if(t === 'function') return {s:'ƒ ' + (v.name || 'anonymous') + '()', k:'muted'};
+      if(v instanceof Element){
+        if(d) return {s:tag(v), k:'el'};
+        var h = v.outerHTML.replace(/\s+/g, ' ');
+        if(h.length > 150) h = h.slice(0, 150) + '…';
+        return {s:h, k:'el'};
+      }
+      if(v instanceof Text) return {s:'#text "' + v.textContent.trim().slice(0, 40) + '"', k:'el'};
+      if(v instanceof NodeList || v instanceof HTMLCollection){
+        var arr = Array.prototype.slice.call(v);
+        var nm = (v instanceof NodeList) ? 'NodeList' : 'HTMLCollection';
+        return {s: nm + '(' + arr.length + ') [' + arr.slice(0, 8).map(function(x){ return x.nodeType === 1 ? tag(x) : '#text'; }).join(', ') + (arr.length > 8 ? ', …' : '') + ']', k:'el'};
+      }
+      if(typeof DOMTokenList !== 'undefined' && v instanceof DOMTokenList) return {s:'DOMTokenList [' + Array.prototype.map.call(v, function(c){ return JSON.stringify(c); }).join(', ') + ']', k:'val'};
+      if(v instanceof Event){
+        return {s: v.constructor.name + ' {type: "' + v.type + '", target: ' + (v.target && v.target.tagName ? tag(v.target) : String(v.target)) + '}', k:'muted'};
+      }
+      if(v instanceof Error) return {s: v.name + ': ' + v.message, k:'val'};
+      if(Array.isArray(v)){
+        if(d > 1) return {s:'Array(' + v.length + ')', k:'muted'};
+        return {s:'[' + v.slice(0, 20).map(function(x){ return fmt(x, d + 1).s; }).join(', ') + (v.length > 20 ? ', …' : '') + ']', k:'val'};
+      }
+      if(t === 'object'){
+        if(d > 1) return {s:'{…}', k:'muted'};
+        var keys = Object.keys(v);
+        var name = (v.constructor && v.constructor.name && v.constructor.name !== 'Object') ? v.constructor.name + ' ' : '';
+        return {s: name + '{' + keys.slice(0, 12).map(function(k){ return k + ': ' + fmt(v[k], d + 1).s; }).join(', ') + (keys.length > 12 ? ', …' : '') + '}', k:'val'};
+      }
+      return {s:String(v), k:'val'};
+    }
+    function post(msg){ msg.__dom5 = RID; try { P.postMessage(msg, '*'); } catch(e){} }
+    function send(type, args){
+      var parts = Array.prototype.map.call(args, function(a){ try { return fmt(a, 0); } catch(e){ return {s:String(a), k:'val'}; } });
+      window.__LOGS.push(parts.map(function(p){ return p.s; }).join(' '));
+      post({type:type, parts:parts});
+    }
+    window.__send = send;
+    ['log', 'info', 'warn', 'error', 'table', 'dir', 'debug'].forEach(function(k){
+      var orig = console[k];
+      var type = (k === 'warn' || k === 'error') ? k : 'log';
+      console[k] = function(){ send(type, arguments); try { orig && orig.apply(console, arguments); } catch(e){} };
+    });
+    window.addEventListener('error', function(e){
+      var msg = e.message || 'Error';
+      if(msg.indexOf('Uncaught') !== 0) msg = 'Uncaught ' + msg;
+      var ln = e.lineno ? (e.lineno - START + 1) : 0;
+      if(ln >= 1 && ln <= NLINES) msg += '   ← baris ' + ln;
+      window.__LOGS.push(msg);
+      post({type:'error', parts:[{s:msg, k:'str'}]});
+    });
+    window.addEventListener('unhandledrejection', function(e){
+      post({type:'error', parts:[{s:'Uncaught (in promise) ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)), k:'str'}]});
+    });
+    // Simulasi perilaku default browser yang "meninggalkan halaman"
+    window.addEventListener('click', function(e){
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if(!a) return;
+      var href = a.getAttribute('href');
+      if(!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+      if(e.defaultPrevented) return;
+      e.preventDefault(); e.__simNav = true;
+      if(window.__CHECKING) return;
+      send('warn', ['Perilaku default <a>: browser pindah ke "' + href + '". Halaman lama (dan state-nya) ditinggalkan.']);
+      document.body.innerHTML = '';
+      var box = document.createElement('div');
+      box.style.cssText = 'font-family:system-ui;padding:22px;color:#5d7a91';
+      box.innerHTML = '<div style="font-size:28px">📄</div><h3 style="margin:6px 0;color:#132a3e"></h3><p style="margin:0 0 8px">Browser berpindah ke halaman lain — halaman sebelumnya beserta script &amp; state-nya hilang.</p><p style="font-size:12px;margin:0">Klik ↻ di bilah alamat untuk memuat ulang contoh.</p>';
+      box.querySelector('h3').textContent = href;
+      document.body.appendChild(box);
+      post({type:'nav', href:href});
+    });
+    window.addEventListener('submit', function(e){
+      if(e.defaultPrevented) return;
+      e.preventDefault(); e.__simNav = true;
+      if(window.__CHECKING) return;
+      send('warn', ['Form ter-submit TANPA e.preventDefault() → browser memuat ulang halaman. Isian form & state JavaScript hilang!']);
+      setTimeout(function(){ post({type:'reload'}); }, 700);
+    });
+    window.__report = function(res){ post({type:'check', res:res}); };
+  }
+
+  function buildDoc(o, rid){
+    const js = (o.js || '').replace(/<\/script/gi, '<\\/script');
+    const nlines = (o.js || '').split('\n').length;
+    let head = '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>' + BASE_CSS + '</style>'
+      + '<script>(' + PRELUDE.toString() + ')(' + JSON.stringify(rid) + ',@@START@@,' + nlines + ');<\/script></head><body>\n'
+      + (o.html || '') + '\n'
+      + (o.helper ? '<script>\n' + o.helper.replace(/<\/script/gi, '<\\/script') + '\n<\/script>\n' : '')
+      + '<script>\n';
+    const start = head.split('\n').length;
+    head = head.replace('@@START@@', String(start));
+    let doc = head + js + '\n<\/script>\n';
+    if(o.check){
+      doc += '<script>window.__SRC=' + JSON.stringify(o.js || '').replace(/</g, '\\u003c') + ';'
+        + 'window.addEventListener("load",function(){setTimeout(function(){window.__CHECKING=true;var __res=[];'
+        + 'function t(c,m){__res.push([!!c,m]);}function $(s){return document.querySelector(s);}function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s));}'
+        + 'try{\n' + o.check.replace(/<\/script/gi, '<\\/script') + '\n}catch(err){__res.push([false,"Error saat pengecekan: "+err.message]);}'
+        + 'window.__CHECKING=false;window.__report(__res);},80);});<\/script>\n';
+    }
+    return doc + '</body></html>';
+  }
+
+  const runs = {};
+  let runSeq = 0;
+  const MAX_LINES = 250;
+
+  function makeRunner(root, url){
+    const frame = root.querySelector('.browser-frame');
+    const cons = root.querySelector('.console-body');
+    const burl = root.querySelector('.burl');
+    const r = { frame: frame, cons: cons, rid: null, last: null, count: 0, ran: false };
+    function empty(){
+      cons.innerHTML = '<div class="console-empty">Console kosong — coba berinteraksi dengan preview di atas.</div>';
+      r.count = 0;
+    }
+    r.clear = empty;
+    r.log = function(type, parts){
+      if(r.count === 0) cons.innerHTML = '';
+      r.count++;
+      const div = document.createElement('div');
+      const cls = type === 'error' ? 'console-error' : type === 'warn' ? 'console-warn' : type === 'sys' ? 'console-sys' : 'console-out';
+      div.className = 'console-line ' + cls;
+      (parts || []).forEach(function(p, i){
+        if(i) div.appendChild(document.createTextNode(' '));
+        const s = document.createElement('span');
+        s.className = (type === 'log') ? ('c-' + (p.k || 'str')) : '';
+        s.textContent = p.s;
+        div.appendChild(s);
+      });
+      cons.appendChild(div);
+      while(cons.children.length > MAX_LINES) cons.removeChild(cons.firstChild);
+      cons.scrollTop = cons.scrollHeight;
+    };
+    r.sys = function(text){ r.log('sys', [{s:text, k:'str'}]); };
+    r.run = function(opts, keepConsole){
+      if(r.rid) delete runs[r.rid];
+      const rid = 'r' + (++runSeq);
+      r.rid = rid; runs[rid] = r; r.last = opts; r.ran = true;
+      if(!keepConsole) empty();
+      if(burl) burl.textContent = url || 'index.html';
+      frame.srcdoc = buildDoc(opts, rid);
+    };
+    const clearBtn = root.querySelector('[data-clear]');
+    if(clearBtn) clearBtn.addEventListener('click', empty);
+    empty();
+    return r;
+  }
+
+  window.addEventListener('message', function(e){
+    const d = e.data;
+    if(!d || !d.__dom5) return;
+    const r = runs[d.__dom5];
+    if(!r || e.source !== r.frame.contentWindow) return;
+    if(d.type === 'check'){ if(r.last && r.last.onCheck) r.last.onCheck(d.res || []); return; }
+    if(d.type === 'reload'){ r.sys('— halaman dimuat ulang —'); const o = Object.assign({}, r.last); delete o.check; r.run(o, true); return; }
+    if(d.type === 'nav'){ if(r.frame.parentElement){ const u = r.frame.parentElement.querySelector('.burl'); if(u) u.textContent = d.href; } return; }
+    r.log(d.type, d.parts);
+  });
+
+  function browserHTML(url){
+    return '<div class="result-col">'
+      + '<div class="browser"><div class="browser-bar"><span class="bdot"></span><span class="bdot"></span><span class="bdot"></span>'
+      + '<span class="burl">' + esc(url || 'index.html') + '</span><button class="brun" data-rerun title="Muat ulang halaman (jalankan ulang)">↻</button></div>'
+      + '<iframe class="browser-frame" title="Preview halaman" sandbox="allow-scripts allow-forms allow-modals"></iframe></div>'
+      + '<div class="console-box"><div class="console-head"><span>Console</span><button data-clear>bersihkan</button></div><div class="console-body"></div></div>'
+      + '</div>';
+  }
+
+  /* =====================================================================
+     Slide statis
+     ===================================================================== */
+  const titleHTML = `
+  <section class="slide">
+    <div class="tag">Sesi Penyampaian · Modul 2 (lanjutan)</div>
+    <h1 class="headline">DOM Manipulation &amp; Event Handling</h1>
+    <p class="lede">Minggu lalu JavaScript kita masih "hidup" di console. Minggu ini kita sambungkan ke halaman: memilih elemen, mengubah isi dan tampilannya, lalu merespons klik, ketikan, dan submit form — fondasi semua aplikasi web interaktif, termasuk React di Modul 4 nanti.</p>
+    <div class="cpmk">
+      <div><b>Sub-CPMK</b>Mahasiswa mampu membuat aplikasi web interaktif dengan JavaScript dan DOM</div>
+      <div><b>Terkait CPMK</b>CPMK-3 · bekal Tugas 1</div>
+      <div><b>Prasyarat</b>Dasar-Dasar JavaScript (Minggu 4)</div>
+    </div>
+    <div class="credit-line">Instructor: <b>Fuad Dary Rosyadi</b> &nbsp;·&nbsp; Compiled by Anthropic Claude</div>
+  </section>`;
+
+  const agendaHTML = `
+  <section class="slide">
+    <h2 class="sub">Peta sesi hari ini · ~155 menit</h2>
+    <ol class="agenda-list">
+      <li><span class="num">01</span><span class="txt">DOM: pohon objek halaman<small>Node, parent, children, sibling — 12 menit</small></span></li>
+      <li><span class="num">02</span><span class="txt">Memilih elemen<small>getElementById, querySelector(All) — 12 menit</small></span></li>
+      <li><span class="num">03</span><span class="txt">Mengubah konten<small>textContent vs innerHTML — 12 menit</small></span></li>
+      <li><span class="num">04</span><span class="txt">Style, classList &amp; atribut<small>style, class, setAttribute, dataset — 14 menit</small></span></li>
+      <li><span class="num">05</span><span class="txt">Membuat &amp; menghapus elemen<small>createElement, append, remove — 14 menit</small></span></li>
+      <li><span class="num">06</span><span class="txt">addEventListener<small>Handler = fungsi yang dipanggil nanti — 14 menit</small></span></li>
+      <li><span class="num">07</span><span class="txt">Objek event<small>target, key, preventDefault — 14 menit</small></span></li>
+      <li><span class="num">08</span><span class="txt">Form &amp; validasi<small>submit, input, .value — 18 menit</small></span></li>
+      <li><span class="num">09</span><span class="txt">Bubbling &amp; propagation<small>Event "naik" ke leluhur — 14 menit</small></span></li>
+      <li><span class="num">10</span><span class="txt">Event delegation<small>Satu listener untuk banyak item — 14 menit</small></span></li>
+      <li><span class="num">11</span><span class="txt">Pola state → render<small>Data dulu, tampilan mengikuti — 16 menit</small></span></li>
+    </ol>
+    <p class="footer-note">Tiap sub-materi: penjelasan → contoh interaktif (kode <b>benar-benar dijalankan</b> di preview + console) → cek pemahaman → <b>Live Coding Lab</b> dengan auto-check. Jawaban kuis yang keliru mengembalikan kalian ke materinya. Lab boleh dilanjutkan saat Asistensi — yang ditandai hijau di badge kanan atas.</p>
+  </section>`;
+
+  const howtoHTML = `
+  <section class="slide">
+    <div class="tag tag-mint">Baru minggu ini</div>
+    <h2 class="sub">Cara pakai Live Coding Lab</h2>
+    <p class="lede">Setiap materi ditutup dengan lab kecil: kalian menulis kode sendiri, halaman mini langsung bereaksi, dan tombol <b>Cek Jawaban</b> menguji hasilnya secara otomatis — mirip unit test.</p>
+    <div class="howto-grid">
+      <div class="pattern-card"><div class="pattern-title">1 · Editor</div><p class="hint-line" style="margin:0">Tab <b>JS</b> dan <b>HTML</b>. Ketik → preview berjalan ulang otomatis (bisa dimatikan). <b>Ctrl/⌘ + Enter</b> = jalankan, <b>Tab</b> = 2 spasi.</p></div>
+      <div class="pattern-card"><div class="pattern-title">2 · Preview = halaman asli</div><p class="hint-line" style="margin:0">Kode dijalankan di browser sungguhan (iframe ter-sandbox). Klik, ketik, dan submit di preview benar-benar memicu event kalian.</p></div>
+      <div class="pattern-card"><div class="pattern-title">3 · Console mini</div><p class="hint-line" style="margin:0"><code>console.log</code>, warning, dan error (lengkap dengan <b>nomor baris</b>) muncul di bawah preview — persis seperti DevTools.</p></div>
+      <div class="pattern-card"><div class="pattern-title">4 · ✓ Cek Jawaban</div><p class="hint-line" style="margin:0">Auto-check memuat ulang halaman, mensimulasikan klik/ketik, lalu memeriksa DOM. Semua hijau = lolos, badge <b>Lab ✓</b> bertambah.</p></div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <div class="col panel">
+        <div class="pattern-title">Kebiasaan baik: buka DevTools asli juga</div>
+        <pre class="snippet" style="margin:0">// Tab Elements = DOM "hidup" (bukan file HTML asli)
+// Pilih elemen di tab Elements, lalu di Console:
+$0                    // elemen yang sedang dipilih
+$0.textContent = "Coba ubah langsung!";</pre>
+      </div>
+      <div class="col panel">
+        <div class="pattern-title">Soal tombol "Lihat solusi"</div>
+        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.55">Tersedia untuk belajar mandiri — pakai <b>setelah</b> mencoba sendiri. Yang dinilai saat praktikum adalah kemampuan kalian menjelaskan dan memodifikasi kode secara langsung.</p>
+      </div>
+    </div>
+  </section>`;
+
+  const enrichmentHTML = `
+  <section class="slide">
+    <div class="tag tag-muted">Pengayaan mandiri — di luar penilaian inti</div>
+    <h2 class="sub">Sekilas: localStorage &amp; &lt;template&gt;</h2>
+    <p class="lede">Dua alat yang sering dipakai bersama pola state → render. Berguna untuk bonus Code Challenge.</p>
+    <div class="row">
+      <div class="col panel">
+        <div class="pattern-title" style="margin-bottom:8px;">localStorage — data bertahan walau halaman di-refresh</div>
+        <pre class="snippet" style="margin:0;">// simpan: localStorage hanya menyimpan STRING → JSON
+localStorage.setItem("tugas", JSON.stringify(tugas));
+
+// muat ulang saat halaman dibuka
+const tersimpan = localStorage.getItem("tugas");
+let tugas = tersimpan ? JSON.parse(tersimpan) : [];
+// (panggil simpan() setiap kali state berubah, sebelum render())</pre>
+      </div>
+      <div class="col panel">
+        <div class="pattern-title" style="margin-bottom:8px;">&lt;template&gt; — cetakan HTML yang tidak ikut tampil</div>
+        <pre class="snippet" style="margin:0;">&lt;template id="tpl-item"&gt;
+  &lt;li&gt;&lt;span class="judul"&gt;&lt;/span&gt; &lt;button class="hapus"&gt;✕&lt;/button&gt;&lt;/li&gt;
+&lt;/template&gt;
+
+const node = document.querySelector("#tpl-item")
+  .content.cloneNode(true);
+node.querySelector(".judul").textContent = judul; // aman
+list.append(node);</pre>
+      </div>
+    </div>
+  </section>`;
+
+  const challengeHTML = `
+  <section class="slide">
+    <div class="tag tag-coral">Code Challenge — dikerjakan di Praktikum · bagian dari Tugas 1</div>
+    <h2 class="sub">Task Tracker Kuliah</h2>
+    <p class="lede" style="margin-bottom:10px;">Gabungkan semua materi hari ini menjadi satu aplikasi kecil. Coba demo di bawah untuk melihat perilaku yang diharapkan — lalu bangun versi kalian sendiri. AI boleh dipakai <b>dengan deklarasi &amp; log prompt</b>; saat Asistensi kalian akan diminta menjelaskan dan memodifikasi kode secara langsung tanpa AI.</p>
+    <div class="row" style="align-items:stretch;">
+      <div class="col" style="flex:1; min-width:300px;">
+        <div class="challenge-demo" data-challenge>
+          <div class="browser"><div class="browser-bar"><span class="bdot"></span><span class="bdot"></span><span class="bdot"></span><span class="burl">demo · task-tracker/index.html</span><button class="brun" data-rerun title="Reset demo">↻</button></div>
+          <iframe class="browser-frame" title="Demo Task Tracker" sandbox="allow-scripts allow-forms allow-modals"></iframe></div>
+          <div class="console-box" style="display:none"><div class="console-body"></div></div>
+        </div>
+      </div>
+      <div class="col" style="flex:1.05; min-width:300px;">
+        <ul class="req-list">
+          <li data-n="01"><b>Form tambah tugas</b> (judul, mata kuliah, deadline) — listener di <code>submit</code> + <code>preventDefault()</code>; validasi judul ≥ 3 karakter &amp; deadline wajib, pesan error tampil di halaman.</li>
+          <li data-n="02"><b>State di array of objects</b> <code>{id, judul, matkul, deadline, selesai}</code>; tampilan dibangun oleh <b>satu</b> fungsi <code>render()</code>.</li>
+          <li data-n="03"><b>Event delegation</b> di <code>&lt;ul&gt;</code>: checkbox selesai &amp; tombol hapus bekerja untuk item baru.</li>
+          <li data-n="04"><b>Filter</b> Semua / Aktif / Selesai dengan class <code>on</code> di tombol aktif.</li>
+          <li data-n="05"><b>Counter</b> "N tugas aktif" + pesan saat daftar kosong.</li>
+          <li data-n="06"><b>Aman</b>: teks dari user ditampilkan lewat <code>textContent</code>, bukan <code>innerHTML</code> mentah.</li>
+          <li data-n="★"><b>Bonus:</b> simpan ke <code>localStorage</code>; urutkan berdasarkan deadline terdekat.</li>
+        </ul>
+        <p class="hint-line"><b>Kumpulkan:</b> <code>index.html</code>, <code>style.css</code>, <code>app.js</code> (dimuat dengan <code>defer</code>) di repo Git — minimal 5 commit bertahap (struktur → render → form → delegation → filter), bukan satu commit besar.</p>
+      </div>
+    </div>
+  </section>`;
+
+  const closingHTML = `
+  <section class="slide">
+    <h2 class="sub">Deklarasi AI &amp; langkah berikutnya</h2>
+    <div class="row">
+      <div class="col panel"><p style="margin-top:0;">Jika kalian memakai AI (ChatGPT, Copilot, dll.) saat mengerjakan lab maupun code challenge, sertakan <b>log prompt</b> singkat bersama submission — bukan untuk dilarang, tapi untuk dipertanggungjawabkan. Riwayat commit Git kalian ikut menjadi bukti proses.</p></div>
+      <div class="col panel"><p style="margin-top:0;"><b>Siklus 3 minggu:</b> Penyampaian (hari ini) → Asistensi (tanya-jawab, lanjutkan Live Coding Lab, progress check) → Praktikum/Evaluasi.</p></div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <div class="col panel">
+        <div class="pattern-title">Ringkasan satu kalimat per konsep</div>
+        <ul class="key-points" style="margin:0">
+          <li>Pilih → ubah: <code>querySelector</code> lalu <code>textContent</code> / <code>classList</code></li>
+          <li>Respons: <code>addEventListener(type, fungsi)</code> — jangan pakai <code>fungsi()</code></li>
+          <li>Form: dengarkan <code>submit</code>, panggil <code>e.preventDefault()</code>, <code>.value</code> selalu string</li>
+          <li>Item dinamis: delegasi ke parent + <code>e.target.closest()</code></li>
+          <li>Ubah data → <code>render()</code>, bukan tambal DOM satu per satu</li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-note">Minggu depan: Asynchronous JavaScript &amp; Fetch API — fungsi <code>render()</code> hari ini akan kita pakai ulang, tapi datanya diambil dari REST API.</p>
+  </section>`;
+
+  /* =====================================================================
+     Ikon SVG tiap materi (gaya sama dengan Minggu 3–4)
+     ===================================================================== */
+  const T = '<text class="ic-muted ic-label" text-anchor="middle"';
+  const icons = {
+    domtree:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-amber" x="60" y="8" width="50" height="22" rx="5" opacity="0.3"/>'+T+' x="85" y="23" fill="var(--amber)">document</text>'
+      +'<path class="ic-line" d="M85 30 V44 M40 44 H130 M40 44 V56 M130 44 V56" stroke-width="1.5"/>'
+      +'<rect class="ic-fill-soft" x="18" y="56" width="44" height="22" rx="5" stroke-width="1.3" filter="url(#softShadow)"/>'+T+' x="40" y="71">head</text>'
+      +'<rect class="ic-fill-soft" x="108" y="56" width="44" height="22" rx="5" stroke-width="1.3" filter="url(#softShadow)"/>'+T+' x="130" y="71">body</text>'
+      +'<path class="ic-line" d="M130 78 V92 M100 92 H160 M100 92 V104 M160 92 V104" stroke-width="1.5"/>'
+      +'<rect class="ic-fill-mint" x="82" y="104" width="36" height="22" rx="5" opacity="0.3"/>'+T+' x="100" y="119" fill="var(--mint)">h1</text>'
+      +'<rect class="ic-fill-mint" x="142" y="104" width="26" height="22" rx="5" opacity="0.3"/>'+T+' x="155" y="119" fill="var(--mint)">ul</text>'
+      +T+' x="40" y="118" style="font-size:9px;">parent → children</text>'
+      +'</svg>',
+    selecting:'<svg viewBox="0 0 170 150">'
+      +[0,1,2,3].map(function(i){ return '<rect class="'+(i%2?'ic-fill-amber':'ic-fill-soft')+'" x="20" y="'+(14+i*28)+'" width="84" height="20" rx="4" '+(i%2?'opacity="0.35"':'stroke-width="1.3"')+'/>'; }).join('')
+      +'<circle class="ic-amber" cx="128" cy="72" r="18" stroke-width="2.2"/><path class="ic-amber" d="M141 85 L158 102" stroke-width="3" stroke-linecap="round"/>'
+      +T+' x="85" y="138" style="font-size:10px;">querySelectorAll(".promo")</text>'
+      +'</svg>',
+    content:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="12" y="24" width="68" height="60" rx="6" stroke-width="1.4" filter="url(#softShadow)"/>'+T+' x="46" y="50" fill="var(--mint)">&lt;b&gt;hai&lt;/b&gt;</text>'+T+' x="46" y="100" fill="var(--mint)">textContent</text>'
+      +'<rect class="ic-fill-soft" x="90" y="24" width="68" height="60" rx="6" stroke-width="1.4" filter="url(#softShadow)"/>'+T+' x="124" y="54" fill="var(--amber)" style="font-size:13px;font-weight:700">hai</text>'+T+' x="124" y="100" fill="var(--amber)">innerHTML</text>'
+      +T+' x="85" y="128" style="font-size:10px;">teks mentah vs di-parse</text>'
+      +'</svg>',
+    styling:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="16" y="20" width="62" height="70" rx="8" stroke-width="1.4" filter="url(#softShadow)"/>'
+      +'<rect x="92" y="20" width="62" height="70" rx="8" fill="#132A3E" stroke="var(--amber)" stroke-width="1.6" filter="url(#softShadow)"/>'
+      +'<path class="ic-amber" d="M80 55 H90" stroke-width="2" marker-end="url(#arrow)"/>'
+      +T+' x="47" y="110">.kartu</text>'+T+' x="123" y="110" fill="var(--amber)">.kartu.gelap</text>'
+      +T+' x="85" y="132" style="font-size:10px;">classList.toggle("gelap")</text>'
+      +'</svg>',
+    create:'<svg viewBox="0 0 170 150">'
+      +[0,1,2].map(function(i){ return '<rect class="ic-fill-soft" x="20" y="'+(18+i*26)+'" width="80" height="18" rx="4" stroke-width="1.3"/>'; }).join('')
+      +'<rect class="ic-fill-mint" x="20" y="96" width="80" height="18" rx="4" opacity="0.35"/>'+T+' x="60" y="109" fill="var(--mint)">+ li baru</text>'
+      +'<path class="ic-mint" d="M140 60 V100 H106" stroke-width="1.8" marker-end="url(#arrow)"/>'+T+' x="140" y="52" fill="var(--mint)">append</text>'
+      +T+' x="85" y="138" style="font-size:10px;">createElement → append</text>'
+      +'</svg>',
+    listener:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-amber" x="18" y="52" width="60" height="30" rx="8" opacity="0.35" filter="url(#softShadow)"/>'+T+' x="48" y="71" fill="var(--amber)" style="font-size:10px;">button</text>'
+      +'<path class="ic-text" d="M62 72 l10 26 l5 -9 l9 9 l4 -4 l-9 -9 l9 -5 z" stroke-width="1" fill="var(--surface)"/>'
+      +'<path class="ic-mint" d="M84 66 H118" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>'
+      +'<rect class="ic-fill-mint" x="120" y="50" width="42" height="32" rx="6" opacity="0.3"/>'+T+' x="141" y="70" fill="var(--mint)">f(e)</text>'
+      +T+' x="85" y="128" style="font-size:10px;">"click" → handler</text>'
+      +'</svg>',
+    eventobj:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="22" y="14" width="126" height="104" rx="8" stroke-width="1.6" filter="url(#softShadow)"/>'
+      +T+' x="85" y="32" fill="var(--amber)" style="font-size:11px;">e</text>'
+      +T+' x="85" y="54" fill="var(--mint)">type: "keydown"</text>'
+      +T+' x="85" y="72" fill="var(--mint)">key: "Enter"</text>'
+      +T+' x="85" y="90" fill="var(--mint)">target: input</text>'
+      +T+' x="85" y="108" fill="var(--coral)">preventDefault()</text>'
+      +'</svg>',
+    forms:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-soft" x="24" y="12" width="122" height="110" rx="8" stroke-width="1.5" filter="url(#softShadow)"/>'
+      +'<rect class="ic-line" x="36" y="26" width="98" height="16" rx="3" stroke-width="1.3"/>'
+      +'<rect class="ic-coral" x="36" y="50" width="98" height="16" rx="3" stroke-width="1.6"/>'+T+' x="85" y="80" fill="var(--coral)" style="font-size:8px;">email tidak valid</text>'
+      +'<rect class="ic-fill-amber" x="36" y="90" width="50" height="20" rx="4" opacity="0.4"/>'+T+' x="61" y="104" fill="var(--amber)">submit</text>'
+      +T+' x="85" y="140" style="font-size:10px;">e.preventDefault()</text>'
+      +'</svg>',
+    bubbling:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-amber" x="14" y="10" width="142" height="116" rx="10" stroke-width="1.8"/>'+T+' x="40" y="26" fill="var(--amber)">.luar</text>'
+      +'<rect class="ic-coral" x="34" y="34" width="102" height="80" rx="8" stroke-width="1.8"/>'+T+' x="62" y="50" fill="var(--coral)">.tengah</text>'
+      +'<rect class="ic-fill-mint" x="56" y="70" width="58" height="26" rx="6" opacity="0.35"/>'+T+' x="85" y="87" fill="var(--mint)">button</text>'
+      +'<path class="ic-text" d="M130 92 V20" stroke-width="1.6" marker-end="url(#arrow)"/>'
+      +T+' x="85" y="142" style="font-size:10px;">bubble: dalam → luar</text>'
+      +'</svg>',
+    delegation:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-amber" x="20" y="10" width="130" height="22" rx="5" opacity="0.3"/>'+T+' x="85" y="25" fill="var(--amber)">ul · 1 listener</text>'
+      +[0,1,2].map(function(i){ return '<rect class="ic-fill-soft" x="34" y="'+(44+i*26)+'" width="102" height="18" rx="4" stroke-width="1.3"/><path class="ic-amber" d="M140 '+(53+i*26)+' Q156 '+(40+i*10)+' 150 34" stroke-width="1.2" fill="none" stroke-dasharray="2 2"/>'; }).join('')
+      +T+' x="85" y="138" style="font-size:10px;">e.target.closest("li")</text>'
+      +'</svg>',
+    render:'<svg viewBox="0 0 170 150">'
+      +'<rect class="ic-fill-amber" x="10" y="38" width="54" height="56" rx="6" opacity="0.3"/>'+T+' x="37" y="60" fill="var(--amber)">[ {…},</text>'+T+' x="37" y="74" fill="var(--amber)">{…} ]</text>'
+      +'<path class="ic-text" d="M68 66 H96" stroke-width="1.8" marker-end="url(#arrow)"/>'+T+' x="82" y="58" style="font-size:8px;">render()</text>'
+      +[0,1,2].map(function(i){ return '<rect class="ic-fill-mint" x="102" y="'+(36+i*22)+'" width="58" height="16" rx="3" opacity="0.35"/>'; }).join('')
+      +T+' x="85" y="124" style="font-size:10px;">state → tampilan</text>'
+      +'</svg>'
+  };
+
+  /* =====================================================================
+     Materi
+     code(s) → array baris JS. Awali baris dengan "!" untuk menyorotnya.
+     ===================================================================== */
+  const topics = [
+    {
+      id:'domtree', label:'Materi 1', title:'DOM: pohon objek halaman',
+      intro:'<p class="lede">Saat membaca file HTML, browser membangun <b>DOM (Document Object Model)</b>: pohon objek JavaScript yang mewakili setiap tag dan teks di halaman. JavaScript tidak pernah mengubah file <code>.html</code> kalian — yang diubah adalah objek-objek DOM ini di memori, dan browser langsung menggambar ulang tampilannya.</p><ul class="key-points"><li>Akar pohon adalah <code>document</code>; tiap tag menjadi <i>element node</i>, teks di dalamnya menjadi <i>text node</i></li><li>Relasi keluarga: <code>parentElement</code>, <code>children</code>, <code>firstElementChild</code>, <code>nextElementSibling</code> — cara "berjalan" dari satu elemen ke elemen lain</li><li>Tab <b>Elements</b> di DevTools = DOM yang hidup, bukan <i>View Page Source</i> (file asli dari server)</li><li>Jika hasil navigasi tidak ada, nilainya <code>null</code> — mengakses properti dari <code>null</code> adalah sumber error nomor satu minggu ini</li></ul>',
+      icon:icons.domtree, exHTML:'ex-domtree-html', url:'profil.html',
+      controls:[
+        {type:'buttons', prop:'start', label:'Titik awal', initial:'ul', options:[{value:'h1',label:'h1'},{value:'ul',label:'#matkul'},{value:'li1',label:'li pertama'}]},
+        {type:'buttons', prop:'nav', label:'Navigasi', initial:'parent', options:[{value:'self',label:'(diri sendiri)'},{value:'parent',label:'parentElement'},{value:'children',label:'children'},{value:'next',label:'nextElementSibling'}]}
+      ],
+      code:function(s){
+        const sel = {h1:'"h1"', ul:'"#matkul"', li1:'"#matkul li"'}[s.start];
+        const nav = {self:'awal', parent:'awal.parentElement', children:'awal.children', next:'awal.nextElementSibling'}[s.nav];
+        const L = ['const awal = document.querySelector('+sel+');', '!const hasil = '+nav+';', 'console.log(hasil);', ''];
+        if(s.nav==='children') L.push('for (const el of hasil) {', '  el.style.outline = "3px solid #F2A93B";', '}');
+        else L.push('hasil.style.outline = "3px solid #F2A93B";');
+        return L;
+      },
+      tip:'Coba <b>#matkul → nextElementSibling</b>: hasilnya <code>null</code>, lalu baris berikutnya error. Perhatikan nomor barisnya.',
+      quiz:{question:'Kalian mengubah teks sebuah &lt;h1&gt; lewat JavaScript, lalu membuka View Page Source. Apa yang terlihat?', explain:'View Page Source menampilkan file HTML asli dari server. Perubahan JavaScript hanya terjadi di DOM (lihat tab Elements), bukan di file.',
+        options:[{label:'Teks asli dari file HTML — perubahan JS hanya terjadi di DOM, bukan di file', correct:true},{label:'Teks baru, karena JavaScript menyimpan perubahan ke file .html', correct:false},{label:'Halaman kosong, karena DOM sudah diubah', correct:false},{label:'Kode JavaScript yang mengubah teks tersebut', correct:false}]},
+      lab:{title:'Jalan-jalan di pohon DOM', url:'profil.html',
+        desc:'Mulai dari satu elemen, jangkau elemen lain hanya dengan navigasi keluarga DOM.',
+        steps:['Beri class <b>aktif</b> ke &lt;li&gt; <b>kedua</b> lewat <code>children</code> atau <code>nextElementSibling</code>','Beri class <b>kartu-aktif</b> ke div pembungkus lewat <code>parentElement</code>','Jangan menambah <code>querySelector</code> kedua'],
+        hint:'<code>children</code> berindeks mulai 0 seperti array — tapi ini HTMLCollection, bukan array.'}
+    },
+    {
+      id:'selecting', label:'Materi 2', title:'Memilih elemen',
+      intro:'<p class="lede">Sebelum mengubah apa pun, kita perlu "memegang" elemennya. Kabar baiknya: selector yang dipakai adalah selector <b>CSS yang sama</b> dengan Minggu 3.</p><ul class="key-points"><li><code>document.getElementById("produk")</code> — cepat dan jelas, khusus id (tanpa tanda <code>#</code>)</li><li><code>document.querySelector(".promo")</code> — elemen <b>pertama</b> yang cocok dengan selector CSS apa pun, atau <code>null</code> jika tidak ada</li><li><code>document.querySelectorAll(".promo")</code> — <b>semua</b> yang cocok, berupa <code>NodeList</code>: punya <code>.length</code> dan <code>.forEach()</code>, tapi <b>bukan array</b> — tidak punya <code>map</code>/<code>filter</code> (pakai <code>Array.from()</code> dulu)</li><li><code>getElementsByClassName</code> masih ada di kode lama, tapi <code>querySelector(All)</code> lebih fleksibel dan menjadi pilihan default</li></ul>',
+      icon:icons.selecting, exHTML:'ex-selecting-html', url:'katalog.html',
+      controls:[{type:'buttons', prop:'m', label:'Cara memilih', initial:'qsa', options:[
+        {value:'byId',label:'getElementById'},{value:'qs',label:'querySelector(".promo")'},{value:'qsa',label:'querySelectorAll(".promo")'},{value:'css',label:'querySelectorAll(":nth-child")'},{value:'none',label:'querySelector(".diskon")'}]}],
+      code:function(s){
+        const m = {
+          byId:['!const hasil = document.getElementById("produk");', 'console.log(hasil);', 'hasil.style.outline = "3px solid #F2A93B";'],
+          qs:['!const hasil = document.querySelector(".promo");', 'console.log(hasil);', 'hasil.style.background = "#FFE9C2";'],
+          qsa:['!const hasil = document.querySelectorAll(".promo");', 'console.log(hasil, "→ length:", hasil.length);', 'hasil.forEach(function (el) {', '  el.style.background = "#FFE9C2";', '});'],
+          css:['!const hasil = document.querySelectorAll("#produk li:nth-child(odd)");', 'console.log(hasil);', 'hasil.forEach(el => el.style.background = "#FFE9C2");'],
+          none:['!const hasil = document.querySelector(".diskon");', 'console.log(hasil);', 'hasil.style.background = "#FFE9C2";']
+        }[s.m];
+        return m;
+      },
+      tip:'Bandingkan <b>querySelector</b> vs <b>querySelectorAll</b> untuk selector yang sama — satu elemen vs NodeList.',
+      quiz:{question:'Kode document.querySelectorAll(".item").map(...) menghasilkan TypeError "map is not a function". Kenapa?', explain:'querySelectorAll mengembalikan NodeList, bukan Array. NodeList punya forEach dan length, tapi tidak punya map/filter — ubah dulu dengan Array.from(nodeList) atau [...nodeList].',
+        options:[{label:'NodeList bukan Array — ubah dulu dengan Array.from() atau spread [...]', correct:true},{label:'Selector ".item" salah tulis, seharusnya "item"', correct:false},{label:'map() hanya bisa dipakai di dalam fungsi arrow', correct:false},{label:'querySelectorAll hanya mengembalikan elemen pertama', correct:false}]},
+      lab:{title:'Sorot katalog', url:'katalog.html',
+        desc:'Latih tiga cara memilih: semua elemen, hitung jumlah, dan selector CSS yang spesifik.',
+        steps:['Semua <code>.harga</code> diberi class <b>sorot</b> (querySelectorAll + forEach)','Tampilkan jumlah <code>.item</code> ke console','&lt;li&gt; <b>terakhir</b> di <code>#produk</code> diberi class <b>habis</b> — cukup satu <code>querySelector</code>'],
+        hint:'Selector CSS apa saja berlaku: <code>"#produk li:last-child"</code>.'}
+    },
+    {
+      id:'content', label:'Materi 3', title:'Mengubah konten: textContent vs innerHTML',
+      intro:'<p class="lede">Dua properti untuk mengganti isi elemen — terlihat mirip, tapi perbedaannya penting untuk keamanan.</p><ul class="key-points"><li><code>textContent</code>: isi diperlakukan sebagai <b>teks biasa</b>. Tanda <code>&lt;b&gt;</code> tampil apa adanya. Aman untuk data dari user — gunakan sebagai default</li><li><code>innerHTML</code>: string di-<b>parse sebagai HTML</b>, tag ikut dirender. Praktis untuk markup yang <i>kalian tulis sendiri</i></li><li>Memasukkan input user ke <code>innerHTML</code> membuka celah <b>XSS</b> (Cross-Site Scripting): penyerang bisa menyisipkan kode yang ikut dijalankan. Detailnya dibahas di mata kuliah Keamanan Web — minggu ini cukup: <i>input user → textContent</i></li><li><code>innerText</code> juga ada, tapi memperhatikan CSS (elemen tersembunyi tidak ikut) dan lebih lambat</li></ul>',
+      icon:icons.content, exHTML:'ex-content-html', url:'komentar.html',
+      controls:[
+        {type:'buttons', prop:'prop', label:'Properti', initial:'textContent', options:[{value:'textContent',label:'textContent'},{value:'innerHTML',label:'innerHTML'}]},
+        {type:'buttons', prop:'isi', label:'Isi (anggap dari input user)', initial:'markup', options:[{value:'teks',label:'teks biasa'},{value:'markup',label:'ada tag <b>'},{value:'jahat',label:'⚠ payload XSS'}]}
+      ],
+      code:function(s){
+        const val = {
+          teks:'"Halo, Rani! Materi DOM seru 👋"',
+          markup:'"<b>Halo</b>, <i>Rani</i>!"',
+          jahat:"`<img src=\"x\" onerror=\"document.body.style.background='#FFD6CC'; console.error('kode penyerang ikut dijalankan!')\">`"
+        }[s.isi];
+        return ['const kotak = document.querySelector("#kotak");', 'const input = '+val+';', '', '!kotak.'+s.prop+' = input;', '', 'console.log("elemen anak:", kotak.children.length);', 'console.log("innerHTML:", kotak.innerHTML);'];
+      },
+      tip:'Pilih <b>innerHTML + payload XSS</b>, lalu bandingkan dengan <b>textContent</b> untuk isi yang sama.',
+      quiz:{question:'Komentar dari pengguna akan ditampilkan di halaman. Properti mana yang paling tepat?', explain:'textContent memperlakukan isi sebagai teks mentah sehingga tag atau script sisipan tidak akan dirender/dijalankan — pilihan aman untuk data dari user.',
+        options:[{label:'textContent — isi selalu diperlakukan sebagai teks', correct:true},{label:'innerHTML — supaya format tebal/miring dari user ikut tampil', correct:false},{label:'outerHTML — mengganti elemen sekaligus isinya', correct:false},{label:'Sama saja, keduanya hanya berbeda nama', correct:false}]},
+      lab:{title:'Kartu mahasiswa', url:'kartu.html',
+        desc:'Isi kartu dari objek <code>mhs</code>. Satu bagian butuh HTML, satu bagian wajib aman.',
+        steps:['<code>#nama</code> dan <code>#nrp</code> diisi dengan <code>textContent</code>','<code>#status</code> berisi badge <code>&lt;span class="badge"&gt;Aktif&lt;/span&gt;</code>','<code>#komentar</code> menampilkan komentar <b>apa adanya</b> — tag tidak boleh ter-render'],
+        hint:'Markup yang kita tulis sendiri → <code>innerHTML</code> boleh. Data dari user → <code>textContent</code>.'}
+    },
+    {
+      id:'styling', label:'Materi 4', title:'Style, classList & atribut',
+      intro:'<p class="lede">Mengubah tampilan dan sifat elemen punya beberapa jalur. Aturan praktisnya: <b>CSS mengatur rupa, JavaScript mengatur status</b>.</p><ul class="key-points"><li><code>el.style.backgroundColor = "…"</code> — menulis <i>inline style</i> (nama properti camelCase). Berguna untuk nilai dinamis seperti posisi/lebar, tapi cepat berantakan</li><li><code>el.classList.add / remove / toggle / contains</code> — cara yang disarankan: gaya disiapkan di CSS, JS cukup memasang/melepas class</li><li><code>getAttribute</code>, <code>setAttribute</code>, <code>removeAttribute</code> — untuk atribut HTML apa pun; banyak atribut juga punya properti langsung: <code>img.src</code>, <code>input.disabled</code>, <code>a.href</code></li><li>Atribut <code>data-*</code> untuk menyimpan data kecil di elemen, dibaca lewat <code>el.dataset</code> (<code>data-status</code> → <code>dataset.status</code>)</li></ul>',
+      icon:icons.styling, exHTML:'ex-styling-html', url:'laporan.html',
+      controls:[{type:'buttons', prop:'op', label:'Operasi', initial:'add', options:[
+        {value:'style',label:'style.*'},{value:'add',label:'classList.add'},{value:'toggle',label:'classList.toggle'},{value:'attr',label:'setAttribute'},{value:'dataset',label:'dataset'}]}],
+      code:function(s){
+        const L = ['const kartu = document.querySelector("#kartu");'];
+        if(s.op==='style') L.push('!kartu.style.backgroundColor = "#FFE9C2";', '!kartu.style.borderColor = "#F2A93B";', 'console.log(kartu.getAttribute("style"));');
+        if(s.op==='add') L.push('!kartu.classList.add("gelap");', 'console.log(kartu.className);', 'console.log(kartu.classList.contains("gelap"));');
+        if(s.op==='toggle') L.push('!console.log(kartu.classList.toggle("gelap"));  // pasang → true', '!console.log(kartu.classList.toggle("gelap"));  // lepas → false', '!console.log(kartu.classList.toggle("gelap"));  // pasang lagi → true');
+        if(s.op==='attr') L.push('const tombol = document.querySelector("#kirim");', '!tombol.setAttribute("disabled", "");', 'tombol.textContent = "Terkirim ✓";', 'console.log("disabled?", tombol.disabled);');
+        if(s.op==='dataset') L.push('!kartu.dataset.status = "terkirim";', 'document.querySelector("#status").textContent = kartu.dataset.status;', 'console.log(kartu.getAttribute("data-status"));', 'console.log(kartu.dataset);');
+        return L;
+      },
+      tip:'Pada <b>style.*</b>, lihat atribut <code>style</code> yang muncul. Pada <b>classList</b>, JS tidak menyebut warna sama sekali.',
+      quiz:{question:'Kenapa el.classList.add("aktif") umumnya lebih disarankan daripada menulis banyak baris el.style.xxx = "..."?', explain:'Dengan class, seluruh tampilan tetap di CSS (mudah diubah, bisa pakai hover/transition/media query), sedangkan JS cukup mengubah status. Inline style menyebar gaya ke JS dan punya spesifisitas sangat tinggi.',
+        options:[{label:'Gaya tetap terkumpul di CSS; JS cukup mengganti status elemen', correct:true},{label:'element.style sudah deprecated dan tidak jalan di browser modern', correct:false},{label:'classList membuat halaman dimuat lebih cepat dari server', correct:false},{label:'element.style hanya bisa mengubah warna, tidak bisa ukuran', correct:false}]},
+      lab:{title:'Mode gelap', url:'pengaturan.html',
+        desc:'Aktifkan mode gelap tanpa menulis satu warna pun di JavaScript — warnanya sudah siap di CSS.',
+        steps:['&lt;body&gt; mendapat class <b>gelap</b>','&lt;html&gt; mendapat <code>data-tema="gelap"</code> lewat <code>dataset</code>','Teks <code>#mode</code> menjadi "gelap"','Tombol <code>#simpan</code> dinonaktifkan'],
+        hint:'<code>document.body</code> dan <code>document.documentElement</code> (&lt;html&gt;) tidak perlu dicari dengan querySelector.'}
+    },
+    {
+      id:'create', label:'Materi 5', title:'Membuat & menghapus elemen',
+      intro:'<p class="lede">Konten dinamis (daftar tugas, hasil pencarian, notifikasi) berarti elemen dibuat dan dibuang saat aplikasi berjalan.</p><ul class="key-points"><li><code>document.createElement("li")</code> membuat elemen baru — tapi baru ada <b>di memori</b>, belum tampil</li><li>Masukkan ke DOM: <code>parent.append(el)</code> (di akhir), <code>parent.prepend(el)</code> (di awal), <code>el.before()</code>/<code>el.after()</code>, atau <code>lama.replaceWith(baru)</code></li><li>Hapus: <code>el.remove()</code></li><li>Isi elemen baru dengan <code>textContent</code>, beri class/atribut sebelum atau sesudah dimasukkan — urutan bebas</li><li>Alternatif cepat: <code>insertAdjacentHTML("beforeend", "…")</code> — ingat aturan Materi 3, jangan untuk data user</li></ul>',
+      icon:icons.create, exHTML:'ex-create-html', url:'antrean.html',
+      controls:[{type:'buttons', prop:'op', label:'Operasi', initial:'append', options:[
+        {value:'append',label:'append'},{value:'prepend',label:'prepend'},{value:'replace',label:'replaceWith'},{value:'remove',label:'remove'},{value:'lupa',label:'lupa append'}]}],
+      code:function(s){
+        const L = ['const antrean = document.querySelector("#antrean");'];
+        if(s.op!=='remove') L.push('const li = document.createElement("li");', 'li.textContent = "Dimas (baru)";', 'li.classList.add("baru");', '');
+        if(s.op==='append') L.push('!antrean.append(li);');
+        if(s.op==='prepend') L.push('!antrean.prepend(li);');
+        if(s.op==='replace') L.push('!antrean.children[1].replaceWith(li);   // ganti "Sari"');
+        if(s.op==='remove') L.push('!antrean.firstElementChild.remove();    // "Budi" selesai');
+        if(s.op==='lupa') L.push('!// antrean.append(li);   ← lupa!', 'console.log("sudah di DOM?", li.isConnected);');
+        L.push('console.log(antrean.children.length, "orang dalam antrean");');
+        return L;
+      },
+      tip:'Pilih <b>lupa append</b>: elemen sudah dibuat dan berisi teks, tapi <code>isConnected</code> masih <code>false</code>.',
+      quiz:{question:'Setelah const li = document.createElement("li"); li.textContent = "Baru"; — kenapa item itu belum muncul di halaman?', explain:'createElement hanya membuat node di memori. Node baru tampil setelah dimasukkan ke pohon DOM, misalnya dengan parent.append(li).',
+        options:[{label:'Elemen belum dimasukkan ke DOM — perlu append/prepend ke sebuah parent', correct:true},{label:'textContent tidak bekerja untuk elemen baru, harus innerHTML', correct:false},{label:'Browser perlu di-refresh agar elemen baru tampil', correct:false},{label:'createElement hanya boleh dipakai di dalam event listener', correct:false}]},
+      lab:{title:'Daftar mata kuliah', url:'matkul.html',
+        desc:'Bangun daftar dari array — pola yang akan terus dipakai sampai Modul 4.',
+        steps:['Hapus &lt;li class="placeholder"&gt;','Untuk tiap item array <code>matkul</code>: <code>createElement</code> → isi teks → <code>append</code> ke <code>#daftar</code>','Tulis jumlah mata kuliah ke <code>#jumlah</code>'],
+        hint:'Jangan ubah isi array — auto-check mencocokkan urutan dan teksnya.'}
+    },
+    {
+      id:'listener', label:'Materi 6', title:'addEventListener',
+      intro:'<p class="lede">Event adalah "sesuatu yang terjadi" di halaman: klik, ketikan, submit form, halaman selesai dimuat. <code>addEventListener</code> mendaftarkan fungsi yang akan dipanggil browser <b>nanti</b>, setiap kali event itu terjadi.</p><ul class="key-points"><li>Bentuk: <code>el.addEventListener("click", namaFungsi)</code> — kirim <b>fungsinya</b>, jangan <b>panggil</b> fungsinya (<code>namaFungsi()</code>)</li><li>Handler boleh function biasa atau arrow function (Minggu 4); satu elemen boleh punya banyak listener</li><li>Event yang sering dipakai: <code>click</code>, <code>dblclick</code>, <code>input</code>, <code>change</code>, <code>submit</code>, <code>keydown</code>, <code>mouseenter</code>/<code>mouseleave</code>, <code>DOMContentLoaded</code></li><li>Hindari atribut <code>onclick="…"</code> di HTML — mencampur logika ke markup dan hanya bisa satu handler</li><li><code>removeEventListener</code> butuh referensi fungsi yang <b>sama</b> — alasan lain memakai fungsi bernama</li></ul>',
+      icon:icons.listener, exHTML:'ex-listener-html', url:'counter.html',
+      controls:[
+        {type:'buttons', prop:'ev', label:'Jenis event', initial:'click', options:[{value:'click',label:'click'},{value:'dblclick',label:'dblclick'},{value:'mouseenter',label:'mouseenter'}]},
+        {type:'buttons', prop:'bentuk', label:'Cara mendaftarkan', initial:'benar', options:[{value:'benar',label:'hitung'},{value:'salah',label:'hitung()'}]}
+      ],
+      code:function(s){
+        return ['const tombol = document.querySelector("#tombol");', 'const angka = document.querySelector("#angka");', 'let jumlah = 0;', '', 'function hitung(e) {', '  jumlah++;', '  angka.textContent = jumlah;', '  console.log("event:", e ? e.type : "(tidak ada event!)", "| jumlah =", jumlah);', '}', '',
+          s.bentuk==='benar' ? '!tombol.addEventListener("'+s.ev+'", hitung);' : '!tombol.addEventListener("'+s.ev+'", hitung());   // ❌',
+          'console.log("listener terpasang, menunggu event…");'];
+      },
+      tip:'Berinteraksilah dengan tombol di preview. Lalu pilih <b>hitung()</b> — perhatikan kapan console mencatat, dan apakah klik masih bekerja.',
+      quiz:{question:'Apa beda tombol.addEventListener("click", hitung) dengan tombol.addEventListener("click", hitung())?', explain:'Tanpa kurung, fungsi hitung diserahkan ke browser untuk dipanggil setiap kali klik. Dengan kurung, hitung langsung dijalankan sekali saat baris itu dieksekusi, dan yang didaftarkan justru nilai return-nya (undefined) — klik berikutnya tidak melakukan apa-apa.',
+        options:[{label:'hitung() langsung dijalankan sekali saat itu juga; yang didaftarkan hasil return-nya (undefined)', correct:true},{label:'Tidak ada beda, kurung hanya gaya penulisan', correct:false},{label:'hitung() membuat listener berjalan dua kali per klik', correct:false},{label:'Tanpa kurung, fungsi tidak akan pernah dipanggil', correct:false}]},
+      lab:{title:'Penghitung kehadiran', url:'kehadiran.html',
+        desc:'Tiga tombol, satu state <code>nilai</code>, satu fungsi <code>tampilkan()</code>.',
+        steps:['<b>+ Tambah</b> menaikkan nilai 1','<b>− Kurang</b> menurunkan 1, tapi tidak pernah di bawah 0','<b>Reset</b> mengembalikan ke 0','Setiap perubahan memanggil <code>tampilkan()</code>'],
+        hint:'Ubah variabel <code>nilai</code> dulu, baru tampilkan. Jangan membaca angka dari DOM.'}
+    },
+    {
+      id:'eventobj', label:'Materi 7', title:'Objek event & preventDefault',
+      intro:'<p class="lede">Browser memanggil handler dengan satu argumen: <b>objek event</b> (biasa dinamai <code>e</code> atau <code>event</code>). Isinya menceritakan apa yang terjadi.</p><ul class="key-points"><li><code>e.type</code> — jenis event; <code>e.target</code> — elemen <b>asal</b> event (yang benar-benar diklik); <code>e.currentTarget</code> — elemen yang <b>memasang</b> listener</li><li>Keyboard: <code>e.key</code> (<code>"Enter"</code>, <code>"Escape"</code>, <code>"a"</code>); mouse: <code>e.clientX/Y</code>, <code>e.offsetX/Y</code></li><li><code>e.preventDefault()</code> membatalkan <b>perilaku bawaan browser</b>: link berpindah halaman, form ter-submit dan reload, checkbox tercentang, dan sebagainya</li><li><code>preventDefault</code> tidak menghentikan handler lain — itu urusan Materi 9</li></ul>',
+      icon:icons.eventobj, exHTML:'ex-eventobj-html', url:'event.html',
+      controls:[{type:'buttons', prop:'sk', label:'Skenario', initial:'keyboard', options:[
+        {value:'keyboard',label:'keydown di input'},{value:'mouse',label:'mouse di kotak'},{value:'linkDefault',label:'klik link (default)'},{value:'linkPrevent',label:'klik link + preventDefault'}]}],
+      code:function(s){
+        if(s.sk==='keyboard') return ['const input = document.querySelector("#ketik");', '', 'input.addEventListener("keydown", function (e) {', '!  console.log(e.type, "| key:", e.key, "| target:", e.target.id);', '  if (e.key === "Enter") {', '    console.log("Enter! isi input =", input.value);', '  }', '});'];
+        if(s.sk==='mouse') return ['const kotak = document.querySelector("#kotak");', 'const koordinat = document.querySelector("#koordinat");', '', 'kotak.addEventListener("mousemove", function (e) {', '!  koordinat.textContent = `x=${e.offsetX}, y=${e.offsetY}`;', '});', '', 'kotak.addEventListener("click", function (e) {', '!  console.log("target:", e.target.id, "| currentTarget:", e.currentTarget.id);', '});'];
+        if(s.sk==='linkDefault') return ['const link = document.querySelector("#link");', '', 'link.addEventListener("click", function (e) {', '  console.log("link diklik… tapi browser tetap pindah halaman");', '});'];
+        return ['const link = document.querySelector("#link");', '', 'link.addEventListener("click", function (e) {', '!  e.preventDefault();', '  console.log("defaultPrevented:", e.defaultPrevented);', '  link.textContent = "Tetap di halaman ini ✓";', '});'];
+      },
+      tip:'Skenario mouse: klik tepat di label kuning — <code>target</code> dan <code>currentTarget</code> jadi berbeda.',
+      quiz:{question:'Sebuah link &lt;a href="hapus.html"&gt; diberi listener click yang memanggil e.preventDefault(). Apa yang terjadi saat diklik?', explain:'Handler tetap berjalan, tetapi perilaku bawaan link (berpindah ke hapus.html) dibatalkan, sehingga pengguna tetap di halaman yang sama.',
+        options:[{label:'Handler berjalan, tapi browser tidak berpindah ke hapus.html', correct:true},{label:'Handler tidak berjalan sama sekali', correct:false},{label:'Browser pindah halaman, lalu handler dijalankan di halaman baru', correct:false},{label:'Link terhapus dari DOM', correct:false}]},
+      lab:{title:'Kotak pesan dosen wali', url:'pesan.html',
+        desc:'Tiga event berbeda di satu komponen kecil.',
+        steps:['Event <code>input</code> pada <code>#pesan</code> → <code>#sisa</code> = 100 − panjang teks','<code>keydown</code> dengan <code>e.key === "Escape"</code> → kosongkan textarea, sisa kembali 100','Klik <code>#bantuan</code> → <code>preventDefault()</code> lalu tampilkan <code>#info</code> (<code>info.hidden = false</code>)'],
+        hint:'Event <code>input</code> terpicu setiap isi berubah — ketik, tempel, maupun hapus.'}
+    },
+    {
+      id:'forms', label:'Materi 8', title:'Form: submit, input & validasi',
+      intro:'<p class="lede">Hampir semua aplikasi web punya form. Polanya selalu sama: dengarkan <code>submit</code>, batalkan reload, baca nilai, validasi, beri umpan balik.</p><ul class="key-points"><li>Pasang listener di <code>&lt;form&gt;</code> untuk event <code>submit</code> — bukan <code>click</code> di tombol, karena menekan Enter di input juga men-submit</li><li><code>e.preventDefault()</code> wajib jika form diproses JavaScript; tanpa itu halaman reload dan semua state hilang</li><li>Nilai input dibaca dari <code>.value</code> — <b>selalu string</b>, juga untuk <code>type="number"</code>. Ingat coercion Minggu 4: pakai <code>Number()</code></li><li><code>input</code> terpicu tiap ketikan (cocok untuk validasi langsung), <code>change</code> saat selesai mengedit</li><li>Validasi di browser untuk kenyamanan pengguna, <b>bukan</b> keamanan — server tetap harus memvalidasi ulang (Modul 3 &amp; Keamanan Web)</li></ul>',
+      icon:icons.forms, exHTML:'ex-forms-html', url:'daftar-asisten.html',
+      controls:[{type:'buttons', prop:'mode', label:'Versi handler', initial:'none', options:[
+        {value:'none',label:'tanpa preventDefault'},{value:'prevent',label:'preventDefault + .value'},{value:'valid',label:'validasi'},{value:'input',label:'event input'}]}],
+      code:function(s){
+        const L = ['const form = document.querySelector("#form");', 'const pesan = document.querySelector("#pesan");', ''];
+        if(s.mode==='none') L.push('form.addEventListener("submit", function (e) {', '  console.log("submit! nama =", form.elements.nama.value);', '!  // tidak ada e.preventDefault()', '});');
+        if(s.mode==='prevent') L.push('form.addEventListener("submit", function (e) {', '!  e.preventDefault();', '  const umur = form.elements.umur.value;', '!  console.log(typeof umur, "→ umur + 1 =", umur + 1);', '  console.log("dengan Number():", Number(umur) + 1);', '});');
+        if(s.mode==='valid') L.push('form.addEventListener("submit", function (e) {', '  e.preventDefault();', '  const nama = form.elements.nama.value.trim();', '  const umur = Number(form.elements.umur.value);', '  pesan.classList.add("error");', '!  if (nama === "") { pesan.textContent = "Nama wajib diisi"; return; }', '!  if (umur < 17) { pesan.textContent = "Umur minimal 17 tahun"; return; }', '  pesan.classList.remove("error");', '  pesan.textContent = `Terima kasih, ${nama}! Data terkirim.`;', '  console.log({ nama, umur });', '  form.reset();', '});');
+        if(s.mode==='input') L.push('const nama = form.elements.nama;', '', '!nama.addEventListener("input", function () {', '  pesan.textContent = `Halo, ${nama.value || "…"}`;', '});', '!nama.addEventListener("change", function () {', '  console.log("change (selesai edit):", nama.value);', '});', 'form.addEventListener("submit", e => e.preventDefault());');
+        return L;
+      },
+      tip:'Isi form lalu tekan <b>Enter</b> atau klik Daftar. Di versi pertama, perhatikan isian kalian ikut hilang.',
+      quiz:{question:'User mengetik 17 di &lt;input type="number" name="umur"&gt;. Kenapa form.elements.umur.value + 1 menghasilkan "171"?', explain:'.value selalu bertipe string, bahkan untuk input type="number". Operator + dengan string melakukan penggabungan (coercion Minggu 4). Konversi dulu dengan Number(...) atau pakai .valueAsNumber.',
+        options:[{label:'.value selalu string, jadi + melakukan penggabungan — konversi dulu dengan Number()', correct:true},{label:'Browser salah membaca angka dari input number', correct:false},{label:'form.elements hanya bisa membaca teks, bukan angka', correct:false},{label:'Harus memakai == bukan + untuk angka dari form', correct:false}]},
+      lab:{title:'Registrasi akun lab', url:'registrasi.html',
+        desc:'Validasi tiga field dan tampilkan semua error sekaligus — bukan satu per satu.',
+        steps:['<code>submit</code> → <code>e.preventDefault()</code>','Kumpulkan pesan ke array <code>errors</code>: nama kosong, email tanpa <code>@</code>, password &lt; 8 karakter','Kosongkan <code>#pesan</code>, lalu tiap error menjadi <code>&lt;li class="error"&gt;</code>','Tanpa error → <code>&lt;li class="sukses"&gt;Pendaftaran berhasil, {nama}!&lt;/li&gt;</code> lalu <code>form.reset()</code>'],
+        hint:'Kalau error lama masih menumpuk, berarti <code>#pesan</code> belum dikosongkan di awal.'}
+    },
+    {
+      id:'bubbling', label:'Materi 9', title:'Bubbling & propagation',
+      intro:'<p class="lede">Klik pada sebuah tombol juga merupakan klik pada semua pembungkusnya. Event berjalan dalam tiga fase: turun dari <code>window</code> ke target (<b>capture</b>), tiba di <b>target</b>, lalu <b>naik</b> kembali ke leluhur (<b>bubble</b>).</p><ul class="key-points"><li>Secara default listener berjalan di fase <b>bubble</b>: urutannya dari elemen terdalam ke terluar</li><li><code>addEventListener("click", fn, { capture: true })</code> membuat listener berjalan saat fase turun — urutan jadi luar → dalam</li><li><code>e.stopPropagation()</code> menghentikan perjalanan event ke elemen berikutnya</li><li>Jangan hobi <code>stopPropagation</code>: fitur lain (menu dropdown, analytics) sering bergantung pada event yang naik ke <code>document</code>. Biasanya lebih baik memeriksa <code>e.target</code></li><li>Bubbling bukan bug — justru ini yang membuat <b>event delegation</b> (Materi 10) mungkin</li></ul>',
+      icon:icons.bubbling, exHTML:'ex-bubbling-html', helper:'ex-bubbling-helper', url:'bubbling.html',
+      controls:[
+        {type:'buttons', prop:'fase', label:'Fase listener', initial:'bubble', options:[{value:'bubble',label:'bubble (default)'},{value:'capture',label:'capture: true'}]},
+        {type:'buttons', prop:'stop', label:'stopPropagation di .tengah', initial:'tidak', options:[{value:'tidak',label:'tidak'},{value:'ya',label:'ya'}]}
+      ],
+      code:function(s){
+        const L = ['["luar", "tengah", "dalam"].forEach(function (nama) {', '  const el = document.querySelector("." + nama);', '  el.addEventListener("click", function (e) {', '    console.log("handler:", nama, "| target:", e.target.className.split(" ")[0]);', '    kilat(el);   // efek kedip + nomor urut (fungsi bantu)'];
+        if(s.stop==='ya') L.push('!    if (nama === "tengah") e.stopPropagation();');
+        L.push('  }'+(s.fase==='capture' ? ', { capture: true }' : '')+');', '});');
+        if(s.fase==='capture') L[L.length-2] = '!' + L[L.length-2];
+        return L;
+      },
+      tip:'Klik <b>button.dalam</b>, lalu klik area <b>div.tengah</b> saja. Bandingkan urutan angka dan <code>target</code>-nya.',
+      quiz:{question:'Sebuah &lt;button&gt; berada di dalam &lt;div id="kartu"&gt;. Keduanya punya listener click (default, tanpa stopPropagation). Saat tombol diklik, apa yang terjadi?', explain:'Dengan bubbling, handler tombol berjalan lebih dulu (target), kemudian event naik dan handler #kartu ikut berjalan. Di kedua handler, e.target tetap tombol.',
+        options:[{label:'Handler tombol jalan dulu, lalu handler #kartu — keduanya dengan e.target = tombol', correct:true},{label:'Hanya handler tombol yang jalan', correct:false},{label:'Handler #kartu jalan dulu, baru tombol', correct:false},{label:'Browser memilih salah satu secara acak', correct:false}]},
+      lab:{title:'Debug menu dropdown', url:'siakad.html',
+        desc:'Bug klasik: menu tidak pernah terbuka. Baca console, pahami urutannya, lalu perbaiki.',
+        steps:['Klik <b>Menu ▾</b> membuka menu','Klik item di dalam menu <b>tidak</b> menutup menu','Klik di luar <code>#dropdown</code> menutup menu','Klik tombol dua kali → menu tertutup lagi'],
+        hint:'<code>parent.contains(e.target)</code> bernilai true jika target ada di dalam parent. Lebih aman daripada stopPropagation.'}
+    },
+    {
+      id:'delegation', label:'Materi 10', title:'Event delegation',
+      intro:'<p class="lede">Memasang listener ke setiap item punya dua masalah: boros, dan item yang ditambahkan <b>belakangan</b> tidak ikut punya listener. Solusinya memanfaatkan bubbling.</p><ul class="key-points"><li>Pasang <b>satu</b> listener di parent yang stabil (misalnya <code>&lt;ul&gt;</code>), bukan di tiap <code>&lt;li&gt;</code> atau tombol</li><li>Di dalam handler, cari tahu apa yang diklik: <code>e.target.closest(".hapus")</code> — naik dari target sampai menemukan selector itu, atau <code>null</code></li><li><code>closest</code> penting karena <code>e.target</code> bisa elemen kecil di dalam tombol (ikon, &lt;span&gt;)</li><li>Simpan identitas item di atribut <code>data-id</code>, baca dengan <code>li.dataset.id</code></li><li>Pola ini dipakai hampir semua daftar dinamis: to-do, keranjang belanja, tabel admin</li></ul>',
+      icon:icons.delegation, exHTML:'ex-delegation-html', url:'tugas.html',
+      controls:[{type:'buttons', prop:'cara', label:'Pendekatan', initial:'peritem', options:[{value:'peritem',label:'listener per tombol'},{value:'delegasi',label:'delegation di <ul>'}]}],
+      code:function(s){
+        const L = ['const list = document.querySelector("#list");', 'let n = 3;', ''];
+        if(s.cara==='peritem') L.push('!document.querySelectorAll(".hapus").forEach(function (btn) {', '!  btn.addEventListener("click", function () {', '    btn.parentElement.remove();', '    console.log("dihapus (listener per tombol)");', '  });', '});');
+        else L.push('!list.addEventListener("click", function (e) {', '!  const btn = e.target.closest(".hapus");', '  if (!btn) return;            // klik di luar tombol hapus', '  btn.closest("li").remove();', '  console.log("dihapus via delegation");', '});');
+        L.push('', 'document.querySelector("#tambah").addEventListener("click", function () {', '  n++;', '  list.insertAdjacentHTML("beforeend",', '    `<li>Tugas ${n} <button class="hapus">hapus</button></li>`);', '  console.log("Tugas", n, "ditambah — coba hapus!");', '});');
+        return L;
+      },
+      tip:'Di <b>listener per tombol</b>: tambah tugas baru lalu coba hapus. Kemudian ganti ke <b>delegation</b> dan ulangi.',
+      quiz:{question:'Listener dipasang lewat document.querySelectorAll(".hapus").forEach(...). Kenapa tombol hapus pada item yang ditambahkan kemudian tidak bekerja?', explain:'querySelectorAll hanya memotret elemen yang ada saat baris itu dijalankan. Tombol baru dibuat belakangan sehingga tidak pernah diberi listener. Delegation di parent menangkap klik dari anak mana pun, termasuk yang baru.',
+        options:[{label:'Listener hanya terpasang pada tombol yang sudah ada saat kode dijalankan', correct:true},{label:'Tombol baru tidak punya class "hapus" karena dibuat lewat JavaScript', correct:false},{label:'Browser membatasi jumlah listener per halaman', correct:false},{label:'insertAdjacentHTML menghapus semua listener lama', correct:false}]},
+      lab:{title:'To-do praktikum', url:'todo.html',
+        desc:'Kode awal memakai listener per tombol — item baru tidak bisa dihapus. Refactor ke delegation.',
+        steps:['Hapus blok ❌ listener per tombol','Satu listener <code>click</code> di <code>#daftar</code>','Klik <code>.hapus</code> → hapus &lt;li&gt;-nya; klik <code>.teks</code> → toggle class <b>selesai</b>','Panggil <code>hitungSisa()</code> setelah perubahan'],
+        hint:'<code>const li = e.target.closest("li");</code> lalu periksa <code>e.target.closest(".hapus")</code>.'}
+    },
+    {
+      id:'render', label:'Materi 11', title:'Pola state → render',
+      intro:'<p class="lede">Semakin banyak interaksi, semakin sulit menambal DOM satu per satu. Pola yang lebih rapi: simpan data di satu tempat (<b>state</b>), lalu satu fungsi <code>render()</code> membangun ulang tampilan dari data itu.</p><ul class="key-points"><li>State = array/objek biasa (Minggu 4). Ia adalah <b>sumber kebenaran</b> — DOM hanya cerminannya</li><li>Setiap aksi pengguna: <b>ubah state → panggil <code>render()</code></b>. Jangan membaca data balik dari DOM</li><li><code>render()</code> memakai <code>filter</code> dan <code>map</code> + <code>join("")</code> yang sudah kalian kenal</li><li>Jika data berasal dari user, bangun elemen dengan <code>textContent</code> (atau escape dulu) — jangan dimasukkan mentah ke <code>innerHTML</code></li><li>Inilah ide inti React (Modul 4): kalian mendeskripsikan tampilan dari state, framework yang mengurus pembaruan DOM</li></ul>',
+      icon:icons.render, exHTML:'ex-render-html', url:'toko.html',
+      controls:[
+        {type:'buttons', prop:'kat', label:'filter kategori', initial:'buku', options:[{value:'semua',label:'semua'},{value:'buku',label:'buku'},{value:'alat',label:'alat'}]},
+        {type:'buttons', prop:'urut', label:'urutan', initial:'asli', options:[{value:'asli',label:'sesuai data'},{value:'murah',label:'termurah dulu'}]}
+      ],
+      code:function(s){
+        const L = ['const produk = [', '  { nama: "Buku Tulis", kategori: "buku", harga: 5000 },', '  { nama: "Pulpen Gel", kategori: "alat", harga: 12000 },', '  { nama: "Novel Bumi", kategori: "buku", harga: 85000 },', '  { nama: "Penggaris", kategori: "alat", harga: 4000 },', '  { nama: "Kamus TI", kategori: "buku", harga: 60000 },', '];', '',
+          'function render(list) {', '  document.querySelector("#hasil").innerHTML = list', '    .map(p => `<li>${p.nama} <b>Rp ${p.harga.toLocaleString("id-ID")}</b></li>`)', '    .join("");   // data milik kita sendiri, bukan input user', '  console.log("render():", list.length, "item");', '}', ''];
+        L.push(s.kat==='semua' ? '!let tampil = produk;' : '!let tampil = produk.filter(p => p.kategori === "'+s.kat+'");');
+        if(s.urut==='murah') L.push('!tampil = tampil.slice().sort((a, b) => a.harga - b.harga);');
+        L.push('render(tampil);');
+        return L;
+      },
+      tip:'Perhatikan: kita tidak pernah menyentuh &lt;li&gt; satu per satu. Cukup ubah data, lalu <code>render()</code>.',
+      quiz:{question:'Aplikasi memakai pola state → render. Pengguna menambahkan produk baru. Langkah yang benar adalah…', explain:'Dalam pola ini array state adalah sumber kebenaran. Tambahkan datanya ke state, lalu panggil render() agar tampilan selalu sesuai data. Menambal DOM langsung membuat data dan tampilan tidak sinkron.',
+        options:[{label:'push data ke array state, lalu panggil render()', correct:true},{label:'append <li> baru langsung ke DOM tanpa mengubah array', correct:false},{label:'Membaca ulang semua <li> dari DOM untuk membangun array baru', correct:false},{label:'Me-refresh halaman agar produk baru muncul', correct:false}]},
+      lab:{title:'Rekap nilai praktikum', url:'rekap.html',
+        desc:'Satu state (<code>filterAktif</code>), satu <code>render()</code>, satu listener delegation — gabungan materi hari ini.',
+        steps:['<code>render()</code> menyaring data sesuai <code>filterAktif</code>','Tiap data → <code>&lt;tr&gt;</code>; <code>&lt;td&gt;</code> skor di bawah 60 diberi class <b>gagal</b>','<code>#ringkasan</code>: "Menampilkan X dari 5 mahasiswa"','Listener delegation di <code>#filter</code>: ubah state, pindahkan class <b>on</b>, panggil <code>render()</code>'],
+        hint:'Nilai filter sudah disiapkan di atribut <code>data-filter</code> tiap tombol → <code>btn.dataset.filter</code>.'}
+    }
+  ];
+
+  const deckPlan = [
+    {kind:'static', html:titleHTML},
+    {kind:'static', html:agendaHTML},
+    {kind:'static', html:howtoHTML}
+  ];
+  topics.forEach(function(t){ deckPlan.push({kind:'topic', id:t.id}); });
+  deckPlan.push({kind:'static', html:enrichmentHTML}, {kind:'static', html:challengeHTML}, {kind:'static', html:closingHTML});
+  const topicById = {}; topics.forEach(function(t){ topicById[t.id] = t; });
+
+  /* =====================================================================
+     Render slide
+     ===================================================================== */
+  function renderControls(topic){
+    return topic.controls.map(function(ctrl){
+      const btns = ctrl.options.map(function(o){ return '<button class="choice'+(o.value===ctrl.initial?' on':'')+'" data-value="'+o.value+'">'+esc(o.label)+'</button>'; }).join('');
+      return '<div class="control-group"><label>'+ctrl.label+'</label><div class="choice-row" data-prop="'+ctrl.prop+'">'+btns+'</div></div>';
+    }).join('');
+  }
+
+  function renderTopic(topic, n){
+    let html = '<section class="slide" id="intro-'+topic.id+'">';
+    html += '<div class="tag">'+topic.label+'</div><h2 class="sub">'+topic.title+'</h2>';
+    html += '<div class="intro-layout"><div class="intro-text">'+topic.intro+'</div><div class="intro-visual">'+topic.icon+'</div></div>';
+    html += '</section>';
+
+    html += '<section class="slide" data-example="'+topic.id+'">';
+    html += '<div class="tag tag-muted">'+topic.title+' — Contoh interaktif (kode benar-benar dijalankan)</div>';
+    html += '<div class="example-layout">';
+    html += '<div class="ex-controls">'+renderControls(topic)+(topic.tip?'<p class="hint-line">'+topic.tip+'</p>':'')+'</div>';
+    html += '<div><div class="example-col-label">Kode JavaScript</div><div class="code-panel" data-code></div></div>';
+    html += '<div><div class="example-col-label">Halaman &amp; Console — interaktif</div>'+browserHTML(topic.url)+'</div>';
+    html += '</div></section>';
+
+    topic.quiz.shuffled = shuffle(topic.quiz.options);
+    html += '<section class="slide qc-slide" data-quiz="'+topic.id+'">';
+    html += '<div class="tag tag-mint">Cek pemahaman · '+topic.title+'</div>';
+    html += '<h2 class="sub">'+topic.quiz.question+'</h2>';
+    html += '<div class="qc-options">'+topic.quiz.shuffled.map(function(o,i){ return '<button class="qc-option" data-idx="'+i+'">'+esc(o.label)+'</button>'; }).join('')+'</div>';
+    html += '<p class="qc-feedback"></p>';
+    html += '</section>';
+
+    const lab = topic.lab;
+    html += '<section class="slide lab-slide" data-lab="'+topic.id+'" id="lab-'+topic.id+'">';
+    html += '<div class="lab-head"><div class="tag">Live Coding Lab '+n+' / '+topics.length+'</div><h2 class="sub">'+lab.title+'</h2></div>';
+    html += '<div class="lab-layout">';
+    html += '<div class="lab-task"><p>'+lab.desc+'</p><ol>'+lab.steps.map(function(s){ return '<li>'+s+'</li>'; }).join('')+'</ol>';
+    html += '<div class="lab-hint">'+lab.hint+'</div>';
+    html += '<div class="lab-actions"><button class="lab-btn check" data-act="check">✓ Cek Jawaban</button><button class="lab-btn" data-act="solution">Lihat solusi</button></div>';
+    html += '<div class="lab-pass-banner">Lab lolos ✓ — mantap!</div><ul class="lab-result"></ul></div>';
+    html += '<div class="editor-col"><div class="editor-toolbar">'
+      + '<button class="ed-tab on" data-tab="js">app.js</button><button class="ed-tab" data-tab="html">index.html</button><span class="spacer"></span>'
+      + '<label class="autorun"><input type="checkbox" data-autorun checked> auto-run</label>'
+      + '<button class="lab-btn" data-act="reset" title="Kembalikan kode awal">↺ Reset</button>'
+      + '<button class="lab-btn primary" data-act="run" title="Ctrl/⌘ + Enter">▶ Jalankan</button></div>'
+      + '<div class="editor"><pre class="ed-hl" aria-hidden="true"></pre><textarea class="ed-ta" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Editor kode"></textarea></div>'
+      + '<div class="editor-foot"><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd> jalankan · <kbd>Tab</kbd> indentasi · <kbd>Enter</kbd> auto-indent</div></div>';
+    html += '<div class="lab-preview">'+browserHTML(lab.url)+'</div>';
+    html += '</div></section>';
+    return html;
+  }
+
+  let slidesHTML = '';
+  let topicN = 0;
+  deckPlan.forEach(function(entry){
+    slidesHTML += entry.kind==='static' ? entry.html : renderTopic(topicById[entry.id], ++topicN);
+  });
+  document.getElementById('slides').innerHTML = slidesHTML;
+
+  /* =====================================================================
+     Theme & fullscreen (sama seperti Minggu 4)
+     ===================================================================== */
+  const themeToggle = document.getElementById('themeToggle');
+  const sunIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Light</span>';
+  const moonIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>Dark</span>';
+  let isLight = false;
+  themeToggle.addEventListener('click', function(){
+    isLight = !isLight;
+    document.documentElement.classList.toggle('light-theme', isLight);
+    themeToggle.innerHTML = isLight ? moonIcon : sunIcon;
+  });
+
+  const fsToggle = document.getElementById('fsToggle');
+  const fsEnterIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>Layar Penuh</span>';
+  const fsExitIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg><span>Keluar Penuh</span>';
+  function toggleFullscreen(){
+    if(!document.fullscreenElement){
+      document.documentElement.requestFullscreen().catch(function(){});
+    } else if(document.exitFullscreen){
+      document.exitFullscreen().catch(function(){});
+    }
+  }
+  fsToggle.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', function(){
+    fsToggle.innerHTML = document.fullscreenElement ? fsExitIcon : fsEnterIcon;
+  });
+
+  /* =====================================================================
+     Contoh interaktif: kode → panel + dijalankan di preview
+     ===================================================================== */
+  const exampleRunners = {};
+  function codePanelHTML(lines){
+    const clean = lines.map(function(l){ return l.charAt(0)==='!' ? l.slice(1) : l; });
+    const hl = hlJS(clean.join('\n')).split('\n');
+    return '<pre class="hl-code">' + hl.map(function(h, i){
+      return '<span class="ln'+(lines[i].charAt(0)==='!'?' cs-hl':'')+'">'+(h || ' ')+'</span>';
+    }).join('') + '</pre>';
+  }
+
+  topics.forEach(function(topic){
+    const section = document.querySelector('[data-example="'+topic.id+'"]');
+    const codeEl = section.querySelector('[data-code]');
+    const runner = makeRunner(section, topic.url);
+    const state = {};
+    topic.controls.forEach(function(c){ state[c.prop] = c.initial; });
+    const html = block(topic.exHTML);
+    const helper = topic.helper ? block(topic.helper) : '';
+
+    function update(run){
+      const lines = topic.code(state);
+      codeEl.innerHTML = codePanelHTML(lines);
+      if(run) runner.run({ html: html, helper: helper, js: lines.map(function(l){ return l.charAt(0)==='!' ? l.slice(1) : l; }).join('\n') });
+    }
+    section.querySelectorAll('.choice-row').forEach(function(group){
+      const prop = group.dataset.prop;
+      group.addEventListener('click', function(e){
+        const btn = e.target.closest('.choice'); if(!btn) return;
+        group.querySelectorAll('.choice').forEach(function(b){ b.classList.remove('on'); });
+        btn.classList.add('on');
+        state[prop] = btn.dataset.value;
+        update(true);
+      });
+    });
+    section.querySelector('[data-rerun]').addEventListener('click', function(){ update(true); });
+    update(false);
+    exampleRunners[topic.id] = { runner: runner, run: function(){ update(true); } };
+  });
+
+  /* =====================================================================
+     Live Coding Lab
+     ===================================================================== */
+  const labs = {};
+  const labBadge = document.getElementById('labBadge');
+  function updateBadge(){
+    const passed = Object.keys(labs).filter(function(k){ return labs[k].passed; }).length;
+    labBadge.textContent = 'Lab ✓ ' + passed + '/' + topics.length;
+  }
+
+  function insertText(ta, text){
+    ta.focus();
+    let ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch(e){ ok = false; }
+    if(!ok){
+      ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end');
+      ta.dispatchEvent(new Event('input'));
+    }
+  }
+
+  topics.forEach(function(topic){
+    const id = topic.id;
+    const section = document.getElementById('lab-'+id);
+    const ta = section.querySelector('.ed-ta');
+    const pre = section.querySelector('.ed-hl');
+    const autorun = section.querySelector('[data-autorun]');
+    const resultEl = section.querySelector('.lab-result');
+    const runner = makeRunner(section, topic.lab.url);
+    const starter = { html: block('lab-'+id+'-html'), js: block('lab-'+id+'-js') };
+    const lab = { html: starter.html, js: starter.js, tab: 'js', passed: false, runner: runner, started: false };
+    labs[id] = lab;
+
+    function paint(){
+      pre.innerHTML = (lab.tab === 'html' ? hlHTML(ta.value) : hlJS(ta.value)) + '\n ';
+      pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft;
+    }
+    function load(){
+      ta.value = lab[lab.tab];
+      ta.scrollTop = 0; ta.scrollLeft = 0;
+      paint();
+    }
+    function run(){
+      lab[lab.tab] = ta.value;
+      lab.started = true;
+      runner.run({ html: lab.html, js: lab.js });
+    }
+    function check(){
+      lab[lab.tab] = ta.value;
+      lab.started = true;
+      resultEl.innerHTML = '<li style="color:var(--muted)">Menjalankan auto-check…</li>';
+      runner.run({ html: lab.html, js: lab.js, check: block('lab-'+id+'-check'), onCheck: function(res){
+        resultEl.innerHTML = '';
+        res.forEach(function(r){
+          const li = document.createElement('li');
+          li.className = r[0] ? 'ok' : 'no';
+          li.textContent = r[1];
+          resultEl.appendChild(li);
+        });
+        const allOk = res.length > 0 && res.every(function(r){ return r[0]; });
+        runner.sys(allOk ? '— auto-check: semua lolos ✓ —' : '— auto-check selesai: ' + res.filter(function(r){ return !r[0]; }).length + ' belum lolos —');
+        if(allOk && !lab.passed){
+          lab.passed = true;
+          section.classList.add('lab-passed');
+          const di = slides.indexOf(section);
+          if(dots[di]) dots[di].classList.add('passed-dot');
+          updateBadge();
+        }
+      }});
+      runner.sys('— auto-check: halaman dimuat ulang & disimulasikan —');
+    }
+    lab.run = run;
+
+    let timer = null;
+    ta.addEventListener('input', function(){
+      lab[lab.tab] = ta.value;
+      paint();
+      if(autorun.checked){
+        clearTimeout(timer);
+        timer = setTimeout(run, 750);
+      }
+    });
+    ta.addEventListener('scroll', function(){ pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; });
+    ta.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); clearTimeout(timer); run(); return; }
+      if(e.key === 's' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); clearTimeout(timer); run(); return; }
+      if(e.key === 'Tab' && !e.shiftKey){ e.preventDefault(); insertText(ta, '  '); return; }
+      if(e.key === 'Enter' && !e.shiftKey && !e.altKey){
+        const before = ta.value.slice(0, ta.selectionStart);
+        const line = before.slice(before.lastIndexOf('\n') + 1);
+        let indent = line.match(/^\s*/)[0];
+        if(/[{(\[]\s*$/.test(line) || (lab.tab === 'html' && /<[a-z][^\/>]*>\s*$/i.test(line) && !/<(input|img|br|hr|meta|link)\b/i.test(line))) indent += '  ';
+        e.preventDefault();
+        insertText(ta, '\n' + indent);
+      }
+    });
+
+    section.querySelectorAll('.ed-tab').forEach(function(tab){
+      tab.addEventListener('click', function(){
+        lab[lab.tab] = ta.value;
+        lab.tab = tab.dataset.tab;
+        section.querySelectorAll('.ed-tab').forEach(function(t){ t.classList.toggle('on', t === tab); });
+        load();
+      });
+    });
+    section.querySelector('[data-act="run"]').addEventListener('click', function(){ clearTimeout(timer); run(); });
+    section.querySelector('[data-rerun]').addEventListener('click', function(){ clearTimeout(timer); run(); });
+    section.querySelector('[data-act="check"]').addEventListener('click', function(){ clearTimeout(timer); check(); });
+    section.querySelector('[data-act="reset"]').addEventListener('click', function(){
+      if(!confirm('Kembalikan kode app.js dan index.html ke kondisi awal?')) return;
+      lab.html = starter.html; lab.js = starter.js;
+      load(); run();
+      resultEl.innerHTML = '';
+    });
+    section.querySelector('[data-act="solution"]').addEventListener('click', function(){
+      if(!confirm('Tampilkan solusi? Isi app.js akan diganti. Sudah mencoba sendiri dulu?')) return;
+      lab.js = block('lab-'+id+'-sol');
+      lab.tab = 'js';
+      section.querySelectorAll('.ed-tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab === 'js'); });
+      load(); run();
+    });
+    load();
+  });
+
+  /* ---------- Challenge demo ---------- */
+  const chWrap = document.querySelector('[data-challenge]');
+  const chRunner = makeRunner(chWrap, 'demo · task-tracker/index.html');
+  function runChallenge(){ chRunner.run({ html: block('challenge-html'), js: block('challenge-js') }); }
+  chWrap.querySelector('[data-rerun]').addEventListener('click', runChallenge);
+
+  /* =====================================================================
+     Kuis (hard gate) — sama seperti Minggu 4
+     ===================================================================== */
+  const COOLDOWN = 7;
+  topics.forEach(function(topic){
+    const quizSection = document.querySelector('[data-quiz="'+topic.id+'"]');
+    const feedback = quizSection.querySelector('.qc-feedback');
+    let answered = false;
+    let cooldownTimer = null;
+    function clearTimer(){ if(cooldownTimer){ clearInterval(cooldownTimer); cooldownTimer = null; } }
+    function resetQuiz(){
+      clearTimer();
+      quizSection.querySelectorAll('.qc-option').forEach(function(b){ b.classList.remove('correct','wrong','locked'); });
+      feedback.textContent = ''; feedback.className = 'qc-feedback';
+      answered = false;
+    }
+    quizSection.querySelectorAll('.qc-option').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(answered) return;
+        answered = true;
+        clearTimer();
+        quizSection.querySelectorAll('.qc-option').forEach(function(b){ b.classList.add('locked'); });
+        const chosen = topic.quiz.shuffled[parseInt(btn.dataset.idx, 10)];
+        if(chosen.correct){
+          btn.classList.add('correct');
+          feedback.className = 'qc-feedback good';
+          feedback.textContent = 'Betul — ' + topic.quiz.explain;
+          quizSection.classList.add('passed');
+          const di = slides.indexOf(quizSection);
+          if(dots[di]) dots[di].classList.add('passed-dot');
+          updateNextState();
+        } else {
+          btn.classList.add('wrong');
+          let remaining = COOLDOWN;
+          feedback.className = 'qc-feedback bad';
+          feedback.textContent = 'Belum tepat. Pelajari lagi materinya — kembali otomatis dalam ' + remaining + 's…';
+          cooldownTimer = setInterval(function(){
+            remaining--;
+            const stillHere = slides[idx] === quizSection;
+            if(remaining > 0){
+              if(stillHere) feedback.textContent = 'Belum tepat. Pelajari lagi materinya — kembali otomatis dalam ' + remaining + 's…';
+            } else {
+              clearTimer();
+              resetQuiz();
+              if(stillHere) goToId('intro-'+topic.id);
+            }
+          }, 1000);
+        }
+      });
+    });
+  });
+
+  /* =====================================================================
+     Navigasi dengan quiz gate
+     ===================================================================== */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const curNum = document.getElementById('curNum');
+  const totNum = document.getElementById('totNum');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const mobileProgress = document.getElementById('mobileProgress');
+  let idx = 0;
+  totNum.textContent = slides.length;
+  slides[0].classList.add('active');
+
+  function canAdvance(){
+    const cur = slides[idx];
+    return !(cur.classList.contains('qc-slide') && !cur.classList.contains('passed'));
+  }
+  function canJumpTo(targetIdx){
+    if(targetIdx <= idx) return true;
+    for(let j = 0; j < targetIdx; j++){
+      if(slides[j].classList.contains('qc-slide') && !slides[j].classList.contains('passed')) return false;
+    }
+    return true;
+  }
+  slides.forEach(function(s, i){
+    const d = document.createElement('button');
+    d.className = 'dot' + (i===0 ? ' on' : '');
+    d.title = 'Slide ' + (i+1) + (s.classList.contains('lab-slide') ? ' · Lab' : s.classList.contains('qc-slide') ? ' · Kuis' : '');
+    d.addEventListener('click', function(){
+      if(!canJumpTo(i)){ shake(); return; }
+      goTo(i);
+    });
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function updateNextState(){
+    const cur = slides[idx];
+    const blocked = cur.classList.contains('qc-slide') && !cur.classList.contains('passed');
+    nextBtn.classList.toggle('locked', blocked);
+    if(blocked){
+      nextBtn.textContent = 'Jawab dengan benar untuk lanjut';
+    } else {
+      nextBtn.innerHTML = 'Berikutnya<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left:6px; vertical-align:-1px;"><polyline points="9 18 15 12 9 6"/></svg>';
+    }
+  }
+  function shake(){
+    nextBtn.classList.add('shake');
+    setTimeout(function(){ nextBtn.classList.remove('shake'); }, 350);
+  }
+  // Jalankan preview hanya saat slide-nya dibuka (hemat memori)
+  function activate(slide){
+    const ex = slide.dataset.example;
+    if(ex && !exampleRunners[ex].runner.ran) exampleRunners[ex].run();
+    const lb = slide.dataset.lab;
+    if(lb && !labs[lb].runner.ran) labs[lb].run();
+    if(slide.querySelector('[data-challenge]') && !chRunner.ran) runChallenge();
+  }
+  function goTo(i){
+    if(i < 0 || i >= slides.length) return;
+    slides[idx].classList.remove('active'); dots[idx].classList.remove('on');
+    idx = i;
+    slides[idx].classList.add('active'); dots[idx].classList.add('on');
+    curNum.textContent = idx+1;
+    if(mobileProgress) mobileProgress.textContent = 'Slide ' + (idx+1) + ' / ' + slides.length;
+    prevBtn.disabled = idx===0;
+    updateNextState();
+    activate(slides[idx]);
+  }
+  function goToId(id){
+    const i = slides.indexOf(document.getElementById(id));
+    if(i>=0) goTo(i);
+  }
+  prevBtn.addEventListener('click', function(){ goTo(idx-1); });
+  nextBtn.addEventListener('click', function(){ if(canAdvance()) goTo(idx+1); else shake(); });
+  prevBtn.disabled = true;
+  if(mobileProgress) mobileProgress.textContent = 'Slide 1 / ' + slides.length;
+  updateNextState();
+  updateBadge();
+
+  document.addEventListener('keydown', function(e){
+    if(['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+    if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){
+      if(e.target.tagName === 'BUTTON' && e.key === ' ') return;
+      if(e.key === ' ') e.preventDefault();
+      if(canAdvance()) goTo(idx+1); else shake();
+    }
+    if(e.key === 'ArrowLeft' || e.key === 'PageUp') goTo(idx-1);
+    if(e.key === 'f' || e.key === 'F') toggleFullscreen();
+  });
+
+  let touchStartX = 0, touchStartY = 0, touchIgnore = false;
+  document.addEventListener('touchstart', function(e){
+    touchIgnore = !!(e.target.closest && e.target.closest('.editor, .code-panel, .console-body, .browser'));
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e){
+    if(touchIgnore) return;
+    const diffX = e.changedTouches[0].screenX - touchStartX;
+    const diffY = e.changedTouches[0].screenY - touchStartY;
+    if(Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)){
+      if(diffX < 0){ if(canAdvance()) goTo(idx+1); else shake(); }
+      else goTo(idx-1);
+    }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
