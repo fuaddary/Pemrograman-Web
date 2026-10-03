@@ -1676,34 +1676,39 @@
 
       const challengeGuideHTML = '\
   <section class="slide">\
-    <div class="tag tag-mint">Blueprint Pengerjaan Praktikum</div>\
-    <h2 class="sub">Panduan Langkah Demi Langkah (Step-by-Step Guide)</h2>\
-    <p class="lede">Gunakan pendekatan bertahap ini saat membangun layout mobile e-commerce agar kode CSS kalian rapi, terstruktur, dan mudah di-debug:</p>\
+    <div class="tag tag-mint">Panduan Pengerjaan · Hint Bertahap</div>\
+    <h2 class="sub">Langkah demi langkah — tanpa kunci jawaban</h2>\
+    <p class="lede">Kerjakan bertahap dari atas ke bawah. Tiap langkah menjelaskan <b>tujuan</b>-nya; buka <b>Petunjuk properti</b> hanya jika buntu — petunjuk menyebut properti yang perlu kalian eksplorasi, bukan nilai jawabannya. Cek hasil di DevTools (mode perangkat mobile).</p>\
     <div class="steps-grid">\
       <div class="step-card">\
         <span class="step-num">Langkah 1</span>\
         <h3>Frame Mobile &amp; Global Setup</h3>\
-        <p>Bungkus tampilan dalam container mobile (<code class="mono">max-width: 420px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; position: relative;</code>). Pasang reset global <code class="mono">box-sizing: border-box</code> agar padding tidak merusak ukuran elemen.</p>\
+        <p>Bungkus seluruh halaman dalam satu container selebar layar HP yang tetap berada di tengah ketika dibuka di laptop. Pastikan padding tidak menambah lebar elemen.</p>\
+        <details style="margin-top:8px;font-size:12px;color:var(--muted);"><summary style="cursor:pointer;color:var(--amber);">💡 Petunjuk properti</summary><p style="margin:6px 0 0;">Eksplorasi: lebar maksimum, margin otomatis kiri-kanan, tinggi minimum berbasis viewport, dan <code class="mono">box-sizing</code> pada selector universal.</p></details>\
       </div>\
       <div class="step-card">\
         <span class="step-num">Langkah 2</span>\
         <h3>Sticky Topbar dengan Flexbox</h3>\
-        <p>Beri header <code class="mono">position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 8px;</code>. Berikan kotak input search <code class="mono">flex: 1</code> agar otomatis mengisi ruang kosong, dan tombol profil dengan ukuran tetap di sisi kanan.</p>\
+        <p>Header tetap terlihat saat halaman di-scroll dan berada di atas konten lain. Kotak search mengisi sisa ruang, tombol profil berukuran tetap di kanan.</p>\
+        <details style="margin-top:8px;font-size:12px;color:var(--muted);"><summary style="cursor:pointer;color:var(--amber);">💡 Petunjuk properti</summary><p style="margin:6px 0 0;">Eksplorasi: nilai <code class="mono">position</code> yang "menempel" saat scroll beserta offset-nya, <code class="mono">z-index</code>, flex container dengan <code class="mono">gap</code>, dan properti flex item yang membuat elemen tumbuh.</p></details>\
       </div>\
       <div class="step-card">\
         <span class="step-num">Langkah 3</span>\
         <h3>Menu Kategori dengan CSS Grid</h3>\
-        <p>Gunakan CSS Grid 2 dimensi untuk 8 ikon kategori: <code class="mono">display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;</code>. Buat tiap item menu rapi terpusat dengan <code class="mono">display: flex; flex-direction: column; align-items: center;</code>.</p>\
+        <p>8 ikon tersusun 2 baris × 4 kolom yang sama lebar; ikon dan labelnya rata tengah di tiap sel.</p>\
+        <details style="margin-top:8px;font-size:12px;color:var(--muted);"><summary style="cursor:pointer;color:var(--amber);">💡 Petunjuk properti</summary><p style="margin:6px 0 0;">Eksplorasi: <code class="mono">grid-template-columns</code> dengan fungsi <code class="mono">repeat()</code> dan satuan <code class="mono">fr</code>; untuk isi tiap item, flexbox berarah kolom.</p></details>\
       </div>\
       <div class="step-card">\
         <span class="step-num">Langkah 4</span>\
         <h3>Katalog Produk (Card List) &amp; clamp()</h3>\
-        <p>Tata kartu produk dengan <code class="mono">display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;</code>. Gunakan <code class="mono">gap</code> untuk jarak antar kartu, dan gunakan <code class="mono">font-size: clamp(11px, 2.5vw, 13px);</code> untuk judul kartu agar dinamis.</p>\
+        <p>Kartu produk tampil 2 kolom dengan jarak antar kartu yang konsisten tanpa margin manual. Judul kartu mengecil mulus di layar sempit tanpa terpotong.</p>\
+        <details style="margin-top:8px;font-size:12px;color:var(--muted);"><summary style="cursor:pointer;color:var(--amber);">💡 Petunjuk properti</summary><p style="margin:6px 0 0;">Eksplorasi: grid dua kolom (atau <code class="mono">auto-fit</code> + <code class="mono">minmax()</code>), <code class="mono">gap</code>, dan <code class="mono">clamp(min, nilai-fluid, max)</code> untuk <code class="mono">font-size</code>.</p></details>\
       </div>\
       <div class="step-card">\
         <span class="step-num">Langkah 5</span>\
-        <h3>Fixed Bottom Nav &amp; Stacking Context</h3>\
-        <p>Kunci navbar bawah di dasar layar dengan <code class="mono">position: sticky; bottom: 0; z-index: 40;</code>. Sebarkan 5 tab menu secara proporsional memakai <code class="mono">display: flex; justify-content: space-around; align-items: center;</code>.</p>\
+        <h3>Bottom Nav &amp; Stacking Context</h3>\
+        <p>Menu bawah selalu terlihat di dasar layar dan tidak tertutup konten, dengan 5 tab tersebar merata.</p>\
+        <details style="margin-top:8px;font-size:12px;color:var(--muted);"><summary style="cursor:pointer;color:var(--amber);">💡 Petunjuk properti</summary><p style="margin:6px 0 0;">Eksplorasi: <code class="mono">position</code> dengan offset bawah, <code class="mono">z-index</code> (bandingkan dengan header), dan nilai <code class="mono">justify-content</code> yang membagi ruang di sekitar item.</p></details>\
       </div>\
     </div>\
   </section>';

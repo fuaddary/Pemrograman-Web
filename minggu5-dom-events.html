@@ -1149,6 +1149,12 @@
       line-height: 1.5;
     }
     .lab-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lab-hints { display: flex; flex-direction: column; gap: 8px; }
+    .lab-hint[hidden] { display: none; }
+    .lab-hint b { color: var(--amber); font-weight: 600; }
+    .hint-msg { font-size: 12px; line-height: 1.45; color: var(--amber); }
+    .hint-msg:empty { display: none; }
+    .lab-btn:disabled { opacity: .5; cursor: default; }
     .lab-btn {
       background: var(--panel-2);
       border: 1px solid var(--line);
@@ -1424,16 +1430,6 @@ console.log(daftar);
 //         lalu beri class "kartu-aktif"
 
   </script>
-  <script type="text/plain" data-k="lab-domtree-sol">
-const daftar = document.querySelector("#matkul");
-console.log(daftar);
-
-const liKedua = daftar.children[1];          // atau daftar.firstElementChild.nextElementSibling
-liKedua.classList.add("aktif");
-
-const pembungkus = daftar.parentElement;     // naik satu tingkat
-pembungkus.classList.add("kartu-aktif");
-  </script>
   <script type="text/plain" data-k="lab-domtree-check">
 const lis = $$("#matkul li");
 t(lis[1] && lis[1].classList.contains("aktif"), '<li> kedua ("Basis Data") punya class "aktif"');
@@ -1487,17 +1483,6 @@ t((__SRC.match(/querySelector|getElementById|getElementsBy/g) || []).length <= 1
 //         di #produk lalu beri class "habis"  (petunjuk: :last-child)
 
   </script>
-  <script type="text/plain" data-k="lab-selecting-sol">
-const semuaHarga = document.querySelectorAll(".harga");
-semuaHarga.forEach(function (el) {
-  el.classList.add("sorot");
-});
-
-const items = document.querySelectorAll(".item");
-console.log("Jumlah item:", items.length);
-
-document.querySelector("#produk li:last-child").classList.add("habis");
-  </script>
   <script type="text/plain" data-k="lab-selecting-check">
 const h = $$(".harga");
 t(h.length === 4 && h.every(function (el) { return el.classList.contains("sorot"); }), 'Keempat .harga punya class "sorot"');
@@ -1542,22 +1527,6 @@ const mhs = {
 // TODO 3: tampilkan mhs.komentar APA ADANYA — tag di dalamnya
 //         tidak boleh ikut ter-render menjadi HTML
 
-  </script>
-  <script type="text/plain" data-k="lab-content-sol">
-const mhs = {
-  nama: "Rani Kusuma",
-  nrp: "5027241001",
-  komentar: "<b>Materi DOM seru!</b> <img src=x>"
-};
-
-document.querySelector("#nama").textContent = mhs.nama;
-document.querySelector("#nrp").textContent = mhs.nrp;
-
-// string ini kita tulis sendiri (bukan dari user) → innerHTML aman
-document.querySelector("#status").innerHTML = '<span class="badge">Aktif</span>';
-
-// isi dari user → textContent: ditampilkan sebagai teks, bukan HTML
-document.querySelector("#komentar").textContent = mhs.komentar;
   </script>
   <script type="text/plain" data-k="lab-content-check">
 t($("#nama").textContent.trim() === "Rani Kusuma", "#nama berisi nama mahasiswa");
@@ -1610,12 +1579,6 @@ t(k.children.length === 0 && k.textContent.indexOf("<b>") !== -1, "Komentar tamp
 // TODO 4: nonaktifkan tombol #simpan
 
   </script>
-  <script type="text/plain" data-k="lab-styling-sol">
-document.body.classList.add("gelap");
-document.documentElement.dataset.tema = "gelap";
-document.querySelector("#mode").textContent = "gelap";
-document.querySelector("#simpan").disabled = true;   // atau setAttribute("disabled", "")
-  </script>
   <script type="text/plain" data-k="lab-styling-check">
 t(document.body.classList.contains("gelap"), '<body> punya class "gelap"');
 t(!document.body.getAttribute("style"), "Tidak memakai inline style pada <body> (pakai classList)");
@@ -1665,20 +1628,6 @@ const daftar = document.querySelector("#daftar");
 // TODO 3: tulis jumlah mata kuliah ke #jumlah
 
   </script>
-  <script type="text/plain" data-k="lab-create-sol">
-const matkul = ["Pemrograman Web", "Basis Data", "Jaringan Komputer", "Statistika"];
-const daftar = document.querySelector("#daftar");
-
-daftar.querySelector(".placeholder").remove();
-
-matkul.forEach(function (nama) {
-  const li = document.createElement("li");
-  li.textContent = nama;
-  daftar.append(li);
-});
-
-document.querySelector("#jumlah").textContent = matkul.length;
-  </script>
   <script type="text/plain" data-k="lab-create-check">
 const li = $$("#daftar li");
 t(!$(".placeholder"), "Placeholder sudah dihapus");
@@ -1721,29 +1670,6 @@ function tampilkan() {
 
 // TODO 3: klik #reset → nilai kembali 0
 
-  </script>
-  <script type="text/plain" data-k="lab-listener-sol">
-const angka = document.querySelector("#angka");
-let nilai = 0;
-
-function tampilkan() {
-  angka.textContent = nilai;
-}
-
-document.querySelector("#tambah").addEventListener("click", function () {
-  nilai++;
-  tampilkan();
-});
-
-document.querySelector("#kurang").addEventListener("click", function () {
-  if (nilai > 0) nilai--;
-  tampilkan();
-});
-
-document.querySelector("#reset").addEventListener("click", function () {
-  nilai = 0;
-  tampilkan();
-});
   </script>
   <script type="text/plain" data-k="lab-listener-check">
 function a() { return $("#angka").textContent.trim(); }
@@ -1798,30 +1724,6 @@ const info = document.querySelector("#info");
 // TODO 3: klik #bantuan → cegah pindah halaman (e.preventDefault())
 //         lalu tampilkan #info  (info.hidden = false)
 
-  </script>
-  <script type="text/plain" data-k="lab-eventobj-sol">
-const pesan = document.querySelector("#pesan");
-const sisa = document.querySelector("#sisa");
-const bantuan = document.querySelector("#bantuan");
-const info = document.querySelector("#info");
-
-function perbaruiSisa() {
-  sisa.textContent = 100 - pesan.value.length;
-}
-
-pesan.addEventListener("input", perbaruiSisa);
-
-pesan.addEventListener("keydown", function (e) {
-  if (e.key === "Escape") {
-    pesan.value = "";
-    perbaruiSisa();
-  }
-});
-
-bantuan.addEventListener("click", function (e) {
-  e.preventDefault();
-  info.hidden = false;
-});
   </script>
   <script type="text/plain" data-k="lab-eventobj-check">
 const ta = $("#pesan");
@@ -1894,38 +1796,6 @@ form.addEventListener("submit", function (e) {
   //   - tidak ada  → satu <li class="sukses">Pendaftaran berhasil, {nama}!</li>
   //                  lalu form.reset()
 
-});
-  </script>
-  <script type="text/plain" data-k="lab-forms-sol">
-const form = document.querySelector("#daftar");
-const pesan = document.querySelector("#pesan");
-
-function tambahPesan(teks, kelas) {
-  const li = document.createElement("li");
-  li.textContent = teks;
-  li.className = kelas;
-  pesan.append(li);
-}
-
-form.addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  const nama = form.elements.nama.value.trim();
-  const email = form.elements.email.value.trim();
-  const password = form.elements.password.value;
-  const errors = [];
-
-  if (nama === "") errors.push("Nama wajib diisi");
-  if (!email.includes("@")) errors.push("Email tidak valid");
-  if (password.length < 8) errors.push("Password minimal 8 karakter");
-
-  pesan.innerHTML = "";
-  if (errors.length > 0) {
-    errors.forEach(function (err) { tambahPesan(err, "error"); });
-  } else {
-    tambahPesan(`Pendaftaran berhasil, ${nama}!`, "sukses");
-    form.reset();
-  }
 });
   </script>
   <script type="text/plain" data-k="lab-forms-check">
@@ -2025,23 +1895,6 @@ document.addEventListener("click", function (e) {
 //   - klik DI DALAM #dropdown (tombol maupun item menu) TIDAK menutup menu
 //   - klik DI LUAR #dropdown tetap menutup menu
   </script>
-  <script type="text/plain" data-k="lab-bubbling-sol">
-const toggle = document.querySelector("#toggle");
-const menu = document.querySelector("#menu");
-const dropdown = document.querySelector("#dropdown");
-
-toggle.addEventListener("click", function () {
-  menu.classList.toggle("buka");
-  console.log("toggle → buka =", menu.classList.contains("buka"));
-});
-
-document.addEventListener("click", function (e) {
-  // klik berasal dari dalam dropdown? biarkan saja
-  if (dropdown.contains(e.target)) return;
-  menu.classList.remove("buka");
-  console.log("document menutup menu | target:", e.target.id || e.target.tagName);
-});
-  </script>
   <script type="text/plain" data-k="lab-bubbling-check">
 const m = $("#menu");
 m.classList.remove("buka");
@@ -2129,40 +1982,6 @@ document.querySelectorAll(".hapus").forEach(function (btn) {
 //   - lalu panggil hitungSisa()
 //   Petunjuk: e.target.closest(".hapus") / e.target.closest("li")
   </script>
-  <script type="text/plain" data-k="lab-delegation-sol">
-const daftar = document.querySelector("#daftar");
-const input = document.querySelector("#input");
-let nextId = 3;
-
-function hitungSisa() {
-  document.querySelector("#sisa").textContent =
-    daftar.querySelectorAll("li:not(.selesai)").length;
-}
-
-document.querySelector("#tambah").addEventListener("click", function () {
-  const teks = input.value.trim();
-  if (!teks) return;
-  const li = document.createElement("li");
-  li.dataset.id = nextId++;
-  li.innerHTML = '<span class="teks"></span> <button class="hapus">✕</button>';
-  li.querySelector(".teks").textContent = teks;
-  daftar.append(li);
-  input.value = "";
-  hitungSisa();
-});
-
-// ✅ Event delegation: satu listener untuk semua item, lama maupun baru
-daftar.addEventListener("click", function (e) {
-  const li = e.target.closest("li");
-  if (!li) return;
-  if (e.target.closest(".hapus")) {
-    li.remove();
-  } else if (e.target.closest(".teks")) {
-    li.classList.toggle("selesai");
-  }
-  hitungSisa();
-});
-  </script>
   <script type="text/plain" data-k="lab-delegation-check">
 const d = $("#daftar");
 $("#input").value = "Tugas uji otomatis";
@@ -2241,42 +2060,6 @@ function render() {
 // TODO 4: SATU listener di #filter (delegation). Saat tombol diklik:
 //         ubah filterAktif, pindahkan class "on" ke tombol itu, panggil render()
 
-
-render();
-  </script>
-  <script type="text/plain" data-k="lab-render-sol">
-const nilai = [
-  { nama: "Andi", skor: 78 },
-  { nama: "Bunga", skor: 55 },
-  { nama: "Citra", skor: 92 },
-  { nama: "Dimas", skor: 60 },
-  { nama: "Eka", skor: 41 },
-];
-let filterAktif = "semua";
-
-function render() {
-  const data = nilai.filter(function (m) {
-    if (filterAktif === "lulus") return m.skor >= 60;
-    if (filterAktif === "gagal") return m.skor < 60;
-    return true;
-  });
-
-  document.querySelector("#tabel").innerHTML = data
-    .map(m => `<tr><td>${m.nama}</td><td class="${m.skor < 60 ? "gagal" : ""}">${m.skor}</td></tr>`)
-    .join("");
-
-  document.querySelector("#ringkasan").textContent =
-    `Menampilkan ${data.length} dari ${nilai.length} mahasiswa`;
-}
-
-document.querySelector("#filter").addEventListener("click", function (e) {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-  filterAktif = btn.dataset.filter;
-  document.querySelectorAll("#filter button").forEach(b => b.classList.remove("on"));
-  btn.classList.add("on");
-  render();
-});
 
 render();
   </script>
@@ -2706,8 +2489,8 @@ $0                    // elemen yang sedang dipilih
 $0.textContent = "Coba ubah langsung!";</pre>
       </div>
       <div class="col panel">
-        <div class="pattern-title">Soal tombol "Lihat solusi"</div>
-        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.55">Tersedia untuk belajar mandiri — pakai <b>setelah</b> mencoba sendiri. Yang dinilai saat praktikum adalah kemampuan kalian menjelaskan dan memodifikasi kode secara langsung.</p>
+        <div class="pattern-title">💡 Hint bertahap — tanpa kunci jawaban</div>
+        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.55">Tidak ada tombol solusi. Tiap lab punya <b>3 hint</b>: dari konsep, ke API yang dipakai, sampai kerangka kode dengan bagian kosong. Hint berikutnya terbuka setelah kalian mencoba <b>✓ Cek Jawaban</b>. Pembahasan dilakukan bersama saat Asistensi.</p>
       </div>
     </div>
   </section>`;
@@ -3129,6 +2912,55 @@ list.append(node);</pre>
     }
   ];
 
+  /* Hint bertahap (hint 1 = lab.hint di objek materi; hint 2–3 di bawah).
+     Prinsip: konsep → API yang relevan → kerangka dengan bagian kosong. Tidak ada solusi utuh. */
+  const HINTS = {
+    domtree: [
+      'Dari <code>daftar</code> (&lt;ul&gt;), &lt;li&gt; kedua adalah anak dengan indeks <b>1</b>. Div pembungkus adalah elemen <b>satu tingkat di atas</b> &lt;ul&gt;.',
+      'Kerangka: <code>daftar.______[1].classList.add("aktif")</code> dan <code>daftar.______.classList.add("kartu-aktif")</code>.'
+    ],
+    selecting: [
+      '<code>querySelectorAll</code> mengembalikan NodeList — pakai <code>.forEach(function (el) { … })</code> untuk memproses tiap elemen. Jumlahnya ada di <code>.length</code>.',
+      'Kerangka: <code>document.querySelectorAll(".harga").forEach(el =&gt; el.______.add("sorot"));</code> — lalu cetak <code>items.______</code> ke console.'
+    ],
+    content: [
+      '<code>#nama</code> dan <code>#nrp</code> cukup <code>el.textContent = nilai</code>. Untuk badge, string HTML-nya kalian tulis sendiri — jadi boleh memakai properti yang mem-<i>parse</i> HTML.',
+      'Uji diri: setelah kode jalan, apakah <code>&lt;b&gt;</code> pada komentar tampil sebagai teks apa adanya? Kalau teksnya malah jadi tebal, properti yang dipakai untuk komentar masih salah.'
+    ],
+    styling: [
+      'Class → <code>classList.add</code>. Atribut data → <code>dataset.namaAtribut = nilai</code>. Tombol nonaktif → properti boolean <code>disabled</code>.',
+      '<code>data-tema</code> di HTML ↔ <code>dataset.tema</code> di JavaScript (awalan <code>data-</code> dibuang).'
+    ],
+    create: [
+      'Urutan kerja: hapus placeholder dengan <code>.remove()</code> → loop array dengan <code>forEach</code> → di dalam loop buat, isi, lalu masukkan elemen.',
+      'Kerangka di dalam forEach: <code>const li = document.______("li"); li.______ = nama; daftar.______(li);</code>'
+    ],
+    listener: [
+      'Tiap tombol butuh <code>addEventListener("click", function () { … })</code> sendiri. Di dalamnya: ubah <code>nilai</code>, lalu panggil <code>tampilkan()</code>.',
+      'Tombol kurang: jalankan <code>nilai--</code> hanya <b>jika</b> <code>nilai</code> masih lebih besar dari 0.'
+    ],
+    eventobj: [
+      'Handler menerima parameter <code>e</code>. Tombol keyboard ada di <code>e.key</code>; perilaku bawaan link dibatalkan dengan <code>e.preventDefault()</code>. Panjang teks: <code>pesan.value.length</code>.',
+      'Buat satu fungsi kecil yang menghitung sisa karakter, lalu panggil dari event <code>input</code> <b>dan</b> setelah textarea dikosongkan oleh tombol Escape.'
+    ],
+    forms: [
+      'Tiga kondisi: <code>nama === ""</code>, <code>!email.includes("@")</code>, <code>password.length &lt; 8</code> → masing-masing <code>errors.push("…")</code>.',
+      'Setelah validasi: kosongkan <code>#pesan</code> dulu, lalu <code>if (errors.length &gt; 0) { … } else { … form.reset(); }</code>. Buat tiap &lt;li&gt; dengan <code>createElement</code> + <code>className</code>.'
+    ],
+    bubbling: [
+      'Baca console: setelah "toggle → buka = true" langsung muncul "document menutup menu". Klik yang <b>sama</b> naik (bubble) sampai ke document.',
+      'Di awal listener document: jika target klik berada di dalam <code>#dropdown</code>, hentikan fungsi lebih awal dengan <code>return</code>.'
+    ],
+    delegation: [
+      'Hapus seluruh blok <code>querySelectorAll(".hapus").forEach(…)</code>. Gantikan dengan satu <code>daftar.addEventListener("click", function (e) { … })</code>.',
+      'Di dalam handler: cari <code>li</code> dulu (<code>if (!li) return;</code>), lalu <code>if (e.target.closest(".hapus")) …  else if (e.target.closest(".teks")) …</code>, terakhir <code>hitungSisa()</code>.'
+    ],
+    render: [
+      'TODO 1–3 semuanya di dalam <code>render()</code>: <code>filter</code> sesuai <code>filterAktif</code> → <code>map</code> ke string <code>&lt;tr&gt;…&lt;/tr&gt;</code> → <code>join("")</code> → <code>innerHTML</code> tbody.',
+      'Listener <code>#filter</code>: <code>const btn = e.target.closest("button")</code>; ubah <code>filterAktif</code> dari <code>btn.dataset.filter</code>, pindahkan class <code>on</code>, lalu panggil <code>render()</code>.'
+    ]
+  };
+
   const deckPlan = [
     {kind:'static', html:titleHTML},
     {kind:'static', html:agendaHTML},
@@ -3175,8 +3007,10 @@ list.append(node);</pre>
     html += '<div class="lab-head"><div class="tag">Live Coding Lab '+n+' / '+topics.length+'</div><h2 class="sub">'+lab.title+'</h2></div>';
     html += '<div class="lab-layout">';
     html += '<div class="lab-task"><p>'+lab.desc+'</p><ol>'+lab.steps.map(function(s){ return '<li>'+s+'</li>'; }).join('')+'</ol>';
-    html += '<div class="lab-hint">'+lab.hint+'</div>';
-    html += '<div class="lab-actions"><button class="lab-btn check" data-act="check">✓ Cek Jawaban</button><button class="lab-btn" data-act="solution">Lihat solusi</button></div>';
+    const hints = [lab.hint].concat(HINTS[topic.id] || []);
+    html += '<div class="lab-actions"><button class="lab-btn check" data-act="check">✓ Cek Jawaban</button><button class="lab-btn" data-act="hint">💡 Hint 1/'+hints.length+'</button></div>';
+    html += '<div class="hint-msg" aria-live="polite"></div>';
+    html += '<div class="lab-hints">' + hints.map(function(h, k){ return '<div class="lab-hint" data-hint="'+k+'" hidden><b>Hint '+(k+1)+'</b> · '+h+'</div>'; }).join('') + '</div>';
     html += '<div class="lab-pass-banner">Lab lolos ✓ — mantap!</div><ul class="lab-result"></ul></div>';
     html += '<div class="editor-col"><div class="editor-toolbar">'
       + '<button class="ed-tab on" data-tab="js">app.js</button><button class="ed-tab" data-tab="html">index.html</button><span class="spacer"></span>'
@@ -3295,7 +3129,7 @@ list.append(node);</pre>
     const resultEl = section.querySelector('.lab-result');
     const runner = makeRunner(section, topic.lab.url);
     const starter = { html: block('lab-'+id+'-html'), js: block('lab-'+id+'-js') };
-    const lab = { html: starter.html, js: starter.js, tab: 'js', passed: false, runner: runner, started: false };
+    const lab = { html: starter.html, js: starter.js, tab: 'js', passed: false, runner: runner, started: false, hintDibuka: 0, cekSejakHint: false };
     labs[id] = lab;
 
     function paint(){
@@ -3313,6 +3147,8 @@ list.append(node);</pre>
       runner.run({ html: lab.html, js: lab.js });
     }
     function check(){
+      lab.cekSejakHint = true;
+      if(hintMsg) hintMsg.textContent = '';
       lab[lab.tab] = ta.value;
       lab.started = true;
       resultEl.innerHTML = '<li style="color:var(--muted)">Menjalankan auto-check…</li>';
@@ -3379,12 +3215,22 @@ list.append(node);</pre>
       load(); run();
       resultEl.innerHTML = '';
     });
-    section.querySelector('[data-act="solution"]').addEventListener('click', function(){
-      if(!confirm('Tampilkan solusi? Isi app.js akan diganti. Sudah mencoba sendiri dulu?')) return;
-      lab.js = block('lab-'+id+'-sol');
-      lab.tab = 'js';
-      section.querySelectorAll('.ed-tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab === 'js'); });
-      load(); run();
+    // Hint bertahap: hint berikutnya terbuka setelah mencoba Cek Jawaban
+    const hintBtn = section.querySelector('[data-act="hint"]');
+    const hintEls = section.querySelectorAll('[data-hint]');
+    const hintMsg = section.querySelector('.hint-msg');
+    hintBtn.addEventListener('click', function(){
+      if(lab.hintDibuka >= hintEls.length) return;
+      if(lab.hintDibuka > 0 && !lab.cekSejakHint){
+        hintMsg.textContent = 'Coba terapkan hint sebelumnya lalu tekan ✓ Cek Jawaban dulu — setelah itu hint berikutnya terbuka.';
+        return;
+      }
+      hintMsg.textContent = '';
+      hintEls[lab.hintDibuka].hidden = false;
+      lab.hintDibuka++;
+      lab.cekSejakHint = false;
+      hintBtn.textContent = lab.hintDibuka < hintEls.length ? '💡 Hint ' + (lab.hintDibuka + 1) + '/' + hintEls.length : 'Semua hint terbuka';
+      hintBtn.disabled = lab.hintDibuka >= hintEls.length;
     });
     load();
   });

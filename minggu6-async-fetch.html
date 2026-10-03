@@ -1149,6 +1149,12 @@
       line-height: 1.5;
     }
     .lab-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lab-hints { display: flex; flex-direction: column; gap: 8px; }
+    .lab-hint[hidden] { display: none; }
+    .lab-hint b { color: var(--amber); font-weight: 600; }
+    .hint-msg { font-size: 12px; line-height: 1.45; color: var(--amber); }
+    .hint-msg:empty { display: none; }
+    .lab-btn:disabled { opacity: .5; cursor: default; }
     .lab-btn {
       background: var(--panel-2);
       border: 1px solid var(--line);
@@ -1934,28 +1940,6 @@ tombol.addEventListener("click", function () {
 
 });
   </script>
-  <script type="text/plain" data-k="lab-sinkron-sol">
-const sisa = document.querySelector("#sisa");
-const status = document.querySelector("#status");
-const tombol = document.querySelector("#mulai");
-
-tombol.addEventListener("click", function () {
-  let detik = 5;
-  sisa.textContent = detik;
-  status.textContent = "Waktu berjalan…";
-  tombol.disabled = true;
-
-  const id = setInterval(function () {
-    detik--;
-    sisa.textContent = detik;
-    if (detik === 0) {
-      clearInterval(id);            // hentikan timer!
-      status.textContent = "Waktu habis!";
-      tombol.disabled = false;
-    }
-  }, 1000);
-});
-  </script>
   <script type="text/plain" data-k="lab-sinkron-check">
 const asliI = window.setInterval, asliT = window.setTimeout;
 window.setInterval = function (fn, ms) { return asliI(fn, (ms || 0) / 20); };   // percepat 20×
@@ -1992,16 +1976,6 @@ t(!$("#mulai").disabled, "Tombol aktif kembali setelah selesai");
 
 console.log("3 · timeout");
 console.log("2 · microtask");
-console.log("1 · sinkron");
-  </script>
-  <script type="text/plain" data-k="lab-eventloop-sol">
-// task (macrotask) → dijalankan paling akhir
-setTimeout(() => console.log("3 · timeout"), 0);
-
-// microtask → setelah kode sinkron, sebelum task
-Promise.resolve().then(() => console.log("2 · microtask"));
-
-// sinkron → langsung
 console.log("1 · sinkron");
   </script>
   <script type="text/plain" data-k="lab-eventloop-check">
@@ -2104,38 +2078,6 @@ document.querySelector("#muat").addEventListener("click", function () {
   //   → #status = "Selesai"
 });
   </script>
-  <script type="text/plain" data-k="lab-callback-sol">
-const status = document.querySelector("#status");
-const nama = document.querySelector("#nama");
-const daftarNilai = document.querySelector("#nilai");
-
-document.querySelector("#muat").addEventListener("click", function () {
-  const nrp = document.querySelector("#nrp").value.trim();
-  status.className = "status";
-  status.textContent = "Memuat…";
-  nama.textContent = "—";
-  daftarNilai.innerHTML = "";
-
-  ambilUser(nrp, function (err, user) {
-    if (err) {
-      status.textContent = err.message;
-      status.classList.add("error");
-      return;
-    }
-    nama.textContent = user.nama;
-
-    ambilNilai(user.nrp, function (err, nilai) {   // ← sudah 2 tingkat bersarang
-      if (err) return (status.textContent = err.message);
-      nilai.forEach(function (n) {
-        const li = document.createElement("li");
-        li.textContent = n.matkul + ": " + n.nilai;
-        daftarNilai.append(li);
-      });
-      status.textContent = "Selesai";
-    });
-  });
-});
-  </script>
   <script type="text/plain" data-k="lab-callback-check">
 window.__CB_DELAY = 30;
 $("#nrp").value = "5027241001";
@@ -2221,44 +2163,6 @@ tombol.addEventListener("click", function () {
   const nrp = document.querySelector("#nrp").value.trim();
   tombol.disabled = true;
 
-});
-  </script>
-  <script type="text/plain" data-k="lab-promise-sol">
-const status = document.querySelector("#status");
-const nama = document.querySelector("#nama");
-
-function tunggu(ms) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, ms);
-  });
-}
-
-function ambilUserP(nrp) {
-  return new Promise(function (resolve, reject) {
-    ambilUser(nrp, function (err, user) {
-      if (err) reject(err);
-      else resolve(user);
-    });
-  });
-}
-
-const tombol = document.querySelector("#muat");
-tombol.addEventListener("click", function () {
-  const nrp = document.querySelector("#nrp").value.trim();
-  tombol.disabled = true;
-  status.textContent = "Memuat…";
-
-  ambilUserP(nrp)
-    .then(function (user) {
-      nama.textContent = user.nama;
-      status.textContent = "Berhasil";
-    })
-    .catch(function (err) {
-      status.textContent = err.message;
-    })
-    .finally(function () {
-      tombol.disabled = false;
-    });
 });
   </script>
   <script type="text/plain" data-k="lab-promise-check">
@@ -2372,33 +2276,6 @@ tombol.addEventListener("click", function () {
   muatProfil(document.querySelector("#nrp").value.trim());
 });
   </script>
-  <script type="text/plain" data-k="lab-asyncawait-sol">
-const tombol = document.querySelector("#muat");
-const status = document.querySelector("#status");
-
-async function muatProfil(nrp) {
-  tombol.disabled = true;
-  status.className = "status";
-  status.textContent = "Memuat…";
-  try {
-    const user = await ambilUserP(nrp);
-    const nilai = await ambilNilaiP(user.nrp);
-    const total = nilai.reduce((jumlah, n) => jumlah + n.nilai, 0);
-    document.querySelector("#nama").textContent = user.nama;
-    document.querySelector("#rata").textContent = (total / nilai.length).toFixed(1);
-    status.textContent = "Berhasil";
-  } catch (err) {
-    status.textContent = err.message;
-    status.classList.add("error");
-  } finally {
-    tombol.disabled = false;
-  }
-}
-
-tombol.addEventListener("click", function () {
-  muatProfil(document.querySelector("#nrp").value.trim());
-});
-  </script>
   <script type="text/plain" data-k="lab-asyncawait-check">
 window.__CB_DELAY = 30;
 t(!/\.then\s*\(/.test(__KODE), 'Tidak ada lagi ".then(" di app.js (komentar diabaikan)');
@@ -2455,33 +2332,6 @@ const data = respon;   // ← perbaiki baris ini
 //         atau null jika teksnya bukan JSON valid (tanpa melempar error!)
 function bacaJSON(teks) {
   return JSON.parse(teks);
-}
-  </script>
-  <script type="text/plain" data-k="lab-json-sol">
-const respon = '[{"nama":"Rani","nilai":[88,92,79]},{"nama":"Budi","nilai":[70,65,81]},{"nama":"Citra","nilai":[95,90,98]}]';
-
-const data = JSON.parse(respon);
-
-const ringkasan = data.map(function (m) {
-  const total = m.nilai.reduce((a, b) => a + b, 0);
-  return { nama: m.nama, rata: Math.round((total / m.nilai.length) * 10) / 10 };
-});
-
-const daftar = document.querySelector("#daftar");
-ringkasan.forEach(function (r) {
-  const li = document.createElement("li");
-  li.textContent = `${r.nama} — ${r.rata}`;
-  daftar.append(li);
-});
-
-document.querySelector("#ekspor").textContent = JSON.stringify(ringkasan, null, 2);
-
-function bacaJSON(teks) {
-  try {
-    return JSON.parse(teks);
-  } catch (err) {
-    return null;
-  }
 }
   </script>
   <script type="text/plain" data-k="lab-json-check">
@@ -2544,32 +2394,6 @@ async function muatMatkul() {
 
 muatMatkul();
   </script>
-  <script type="text/plain" data-k="lab-fetch-sol">
-const status = document.querySelector("#status");
-const tabel = document.querySelector("#tabel");
-
-async function muatMatkul() {
-  status.textContent = "Memuat…";
-  const res = await fetch("/api/matkul");
-  const data = await res.json();
-
-  data.forEach(function (mk) {
-    const tr = document.createElement("tr");
-    [mk.kode, mk.nama, mk.sks].forEach(function (isi) {
-      const td = document.createElement("td");
-      td.textContent = isi;
-      tr.append(td);
-    });
-    tabel.append(tr);
-  });
-
-  const total = data.reduce((jumlah, mk) => jumlah + mk.sks, 0);
-  document.querySelector("#total").textContent = total;
-  status.textContent = `${data.length} mata kuliah dimuat`;
-}
-
-muatMatkul();
-  </script>
   <script type="text/plain" data-k="lab-fetch-check">
 t(/memuat/i.test($("#status").textContent), '"Memuat…" tampil selama request berjalan');
 t(__API.calls.some(function (c) { return c.path === "/api/matkul" && c.method === "GET"; }), "Ada request GET /api/matkul (lihat tab Network)");
@@ -2626,35 +2450,6 @@ document.querySelector("#cari").addEventListener("click", async function () {
   pesan.className = "pesan";
   pesan.textContent = "Mencari…";
 
-});
-  </script>
-  <script type="text/plain" data-k="lab-httperror-sol">
-async function ambilJSON(url) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));   // body error bisa saja bukan JSON
-    const err = new Error(body.error || `HTTP ${res.status}`);
-    err.status = res.status;
-    throw err;
-  }
-  return res.json();
-}
-
-const pesan = document.querySelector("#pesan");
-
-document.querySelector("#cari").addEventListener("click", async function () {
-  const nrp = document.querySelector("#nrp").value.trim();
-  pesan.className = "pesan";
-  pesan.textContent = "Mencari…";
-  try {
-    const m = await ambilJSON(`/api/mahasiswa/${nrp}`);
-    pesan.textContent = `${m.nama} · angkatan ${m.angkatan}`;
-  } catch (err) {
-    pesan.classList.add("error");
-    pesan.textContent = err instanceof TypeError
-      ? "Tidak dapat terhubung ke server"
-      : err.message;
-  }
 });
   </script>
   <script type="text/plain" data-k="lab-httperror-check">
@@ -2754,59 +2549,6 @@ form.addEventListener("submit", async function (e) {
   //         (petunjuk: try … finally)
 });
   </script>
-  <script type="text/plain" data-k="lab-post-sol">
-const form = document.querySelector("#form");
-const tombol = document.querySelector("#kirim");
-const pesan = document.querySelector("#pesan");
-const daftar = document.querySelector("#daftar");
-
-function tambahKeDaftar(m) {
-  const li = document.createElement("li");
-  li.textContent = `${m.nama} — ${m.nrp}`;
-  daftar.append(li);
-}
-
-async function muatAwal() {
-  const res = await fetch("/api/mahasiswa");
-  const data = await res.json();
-  data.forEach(tambahKeDaftar);
-}
-muatAwal();
-
-form.addEventListener("submit", async function (e) {
-  e.preventDefault();
-  const data = {
-    nama: form.elements.nama.value.trim(),
-    nrp: form.elements.nrp.value.trim()
-  };
-
-  tombol.disabled = true;
-  tombol.textContent = "Mengirim…";
-  pesan.className = "pesan";
-  try {
-    const res = await fetch("/api/mahasiswa", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-    const body = await res.json();
-    if (res.ok) {
-      tambahKeDaftar(body);
-      form.reset();
-      pesan.textContent = `Tersimpan: ${body.nama}`;
-    } else {
-      pesan.classList.add("error");
-      pesan.textContent = body.error;
-    }
-  } catch (err) {
-    pesan.classList.add("error");
-    pesan.textContent = "Tidak dapat terhubung ke server";
-  } finally {
-    tombol.disabled = false;
-    tombol.textContent = "Tambah";
-  }
-});
-  </script>
   <script type="text/plain" data-k="lab-post-check">
 t(await sampai(function () { return $$("#daftar li").length === 6; }), "Daftar awal (6 mahasiswa) termuat");
 const f = $("#form");
@@ -2899,39 +2641,6 @@ async function muatDashboard() {
 
 muatDashboard();
   </script>
-  <script type="text/plain" data-k="lab-parallel-sol">
-async function ambil(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`);
-  return res.json();
-}
-
-function isi(id, nilai) {
-  document.querySelector(id).textContent = nilai;
-}
-
-function jumlahAtauGagal(hasil) {
-  return hasil.status === "fulfilled" ? hasil.value.length : "gagal";
-}
-
-async function muatDashboard() {
-  const t0 = performance.now();
-
-  // ketiga request dimulai BERSAMAAN, lalu ditunggu bersama
-  const [mhs, mk, info] = await Promise.allSettled([
-    ambil("/api/mahasiswa"),
-    ambil("/api/matkul"),
-    ambil("/api/pengumuman")
-  ]);
-
-  isi("#jml-mhs", jumlahAtauGagal(mhs));
-  isi("#jml-mk", jumlahAtauGagal(mk));
-  isi("#jml-info", jumlahAtauGagal(info));
-  isi("#waktu", `⏱ ${Math.round(performance.now() - t0)} ms`);
-}
-
-muatDashboard();
-  </script>
   <script type="text/plain" data-k="lab-parallel-check">
 await sampai(function () { return $("#jml-info").textContent.trim() !== "…"; }, 3000);
 await jeda(100);
@@ -3014,67 +2723,6 @@ input.addEventListener("input", function () {
 });
 
 // TODO 4: klik #ulang → cari ulang dengan state.q
-  </script>
-  <script type="text/plain" data-k="lab-uistate-sol">
-const input = document.querySelector("#cari");
-const status = document.querySelector("#status");
-const hasil = document.querySelector("#hasil");
-const ulang = document.querySelector("#ulang");
-
-const state = { status: "idle", data: [], error: null, q: "" };
-
-function render() {
-  status.className = "status";
-  ulang.hidden = true;
-  hasil.replaceChildren();
-
-  if (state.status === "loading") {
-    status.textContent = "Memuat…";
-  } else if (state.status === "error") {
-    status.textContent = `Gagal memuat: ${state.error}`;
-    status.classList.add("error");
-    ulang.hidden = false;
-  } else if (state.status === "success") {
-    if (state.data.length === 0) {
-      status.textContent = `Tidak ada hasil untuk "${state.q}"`;
-    } else {
-      status.textContent = `${state.data.length} hasil`;
-      state.data.forEach(function (m) {
-        const li = document.createElement("li");
-        li.textContent = m.nama;
-        hasil.append(li);
-      });
-    }
-  }
-}
-
-async function cari(q) {
-  state.q = q;
-  state.status = "loading";
-  render();
-  try {
-    const res = await fetch(`/api/mahasiswa?q=${encodeURIComponent(q)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    state.data = await res.json();
-    state.status = "success";
-  } catch (err) {
-    state.status = "error";
-    state.error = err.message;
-  }
-  render();
-}
-
-let timer;
-input.addEventListener("input", function () {
-  clearTimeout(timer);
-  timer = setTimeout(function () {
-    cari(input.value.trim());
-  }, 300);
-});
-
-ulang.addEventListener("click", function () {
-  cari(state.q);
-});
   </script>
   <script type="text/plain" data-k="lab-uistate-check">
 const inp = $("#cari");
@@ -3586,6 +3234,7 @@ t(await sampai(function () { return /Budi/.test($("#hasil").textContent); }, 200
       + '</div>';
   }
 
+
   /* =====================================================================
      Slide statis
      ===================================================================== */
@@ -3642,8 +3291,8 @@ t(await sampai(function () { return /Budi/.test($("#hasil").textContent); }, 200
 // Throttling "Slow 3G" / "Offline" = simulasi jaringan buruk</pre>
       </div>
       <div class="col panel">
-        <div class="pattern-title">Soal tombol "Lihat solusi"</div>
-        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.55">Tetap tersedia untuk belajar mandiri — pakai <b>setelah</b> mencoba sendiri. Saat Asistensi kalian diminta menjelaskan urutan eksekusi kode async kalian secara lisan.</p>
+        <div class="pattern-title">💡 Hint bertahap — tanpa kunci jawaban</div>
+        <p style="margin:0;font-size:14px;color:var(--muted);line-height:1.55">Tidak ada tombol solusi. Tiap lab punya <b>3 hint</b> yang dibuka satu per satu; hint berikutnya terbuka setelah kalian mencoba <b>✓ Cek Jawaban</b>. Saat Asistensi kalian diminta menjelaskan urutan eksekusi kode async kalian secara lisan.</p>
       </div>
     </div>
   </section>`;
@@ -4187,6 +3836,55 @@ xhr.send();
     }
   ];
 
+  /* Hint bertahap (hint 1 = lab.hint di objek materi; hint 2–3 di bawah).
+     Prinsip: konsep → API yang relevan → kerangka dengan bagian kosong. Tidak ada solusi utuh. */
+  const HINTS = {
+    sinkron: [
+      'Simpan id timer: <code>const id = setInterval(function () { … }, 1000);</code>. Di dalam callback: kurangi <code>detik</code>, tampilkan, lalu periksa apakah sudah 0.',
+      'Di dalam <code>if (detik === 0) { … }</code> ada <b>tiga</b> hal: hentikan interval dengan id tadi, ubah status, aktifkan tombol.'
+    ],
+    eventloop: [
+      'Baris "3" harus jalan paling akhir → jadikan <b>task</b>. Baris "2" di tengah → jadikan <b>microtask</b>. Baris "1" → biarkan sinkron.',
+      'Bentuk pembungkus: <code>setTimeout(() =&gt; ____, 0);</code> dan <code>Promise.resolve().then(() =&gt; ____);</code>'
+    ],
+    callback: [
+      'Struktur: <code>ambilUser(nrp, function (err, user) { if (err) { …; return; } … ambilNilai(user.nrp, function (err, nilai) { … }); });</code>',
+      'Di callback <code>ambilNilai</code>: <code>forEach</code> tiap nilai → <code>&lt;li&gt;</code> berisi <code>matkul + ": " + nilai</code>, lalu ubah status menjadi "Selesai".'
+    ],
+    promise: [
+      '<code>tunggu</code>: panggil <code>resolve</code> dari dalam <code>setTimeout</code>. <code>ambilUserP</code>: panggil <code>ambilUser</code> di dalam executor Promise; di callback-nya pilih <code>reject(err)</code> atau <code>resolve(user)</code>.',
+      'Di handler klik: tulis "Memuat…", lalu <code>ambilUserP(nrp).then(…).catch(…).finally(…)</code>.'
+    ],
+    asyncawait: [
+      'Tambahkan <code>async</code> di depan <code>function muatProfil</code>. Pola <code>promise.then(u =&gt; …)</code> menjadi <code>const u = await promise;</code>.',
+      'Isi <code>.then</code> pindah ke blok <code>try</code>, isi <code>.catch</code> ke <code>catch (err)</code>, isi <code>.finally</code> ke <code>finally</code>. Variabel <code>let user</code> di luar tidak diperlukan lagi.'
+    ],
+    json: [
+      'Rata-rata = jumlah (<code>reduce</code>) dibagi <code>length</code>. <code>map</code> menghasilkan objek baru <code>{ nama: …, rata: … }</code> untuk tiap mahasiswa.',
+      'Argumen ketiga <code>JSON.stringify(data, null, ___)</code> mengatur indentasi. <code>bacaJSON</code>: bungkus parse dengan <code>try { … } catch (err) { … }</code>.'
+    ],
+    fetch: [
+      'Butuh dua <code>await</code>: yang pertama menghasilkan <b>Response</b> dari <code>fetch(…)</code>, yang kedua membaca body-nya dengan <code>res.____()</code> sehingga menjadi array.',
+      'Untuk tiap mata kuliah buat <code>tr</code>; untuk tiap nilai di <code>[mk.kode, mk.nama, mk.sks]</code> buat <code>td</code>. Total SKS: <code>reduce</code> dengan nilai awal 0.'
+    ],
+    httperror: [
+      'Di <code>ambilJSON</code>, periksa <code>res.ok</code> <b>sebelum</b> mengembalikan data. Body error tetap bisa dibaca dengan <code>await res.json()</code> — isinya <code>{ error: "…" }</code>.',
+      'Di handler: <code>try { … await ambilJSON(…) … } catch (err) { … }</code>. Bedakan jaringan putus dengan <code>err instanceof TypeError</code>.'
+    ],
+    post: [
+      'Argumen kedua <code>fetch</code> berisi tiga kunci: <code>method</code>, <code>headers</code>, <code>body</code>. Body harus berupa <b>string</b> JSON.',
+      'Bungkus request dengan <code>try { … } finally { … }</code>; kembalikan tombol di <code>finally</code>. Gunakan <code>res.ok</code> untuk memilih cabang sukses atau gagal.'
+    ],
+    parallel: [
+      'Jangan <code>await</code> satu per satu. Buat ketiga Promise sekaligus di dalam satu array, lalu tunggu bersama dengan <code>await Promise.____([…])</code>.',
+      'Tiap hasil <code>allSettled</code> berbentuk <code>{ status: "fulfilled", value }</code> atau <code>{ status: "rejected", reason }</code>. Buat fungsi kecil yang mengembalikan jumlah data atau <code>"gagal"</code>.'
+    ],
+    uistate: [
+      'Debounce: simpan id timer di variabel <b>di luar</b> listener; setiap event <code>input</code> → <code>clearTimeout</code> dulu, lalu pasang <code>setTimeout</code> baru 300 ms.',
+      'Di <code>cari</code>: <code>try { fetch → cek res.ok (throw jika gagal) → isi state.data &amp; status "success" } catch (err) { status "error" }</code>, lalu <code>render()</code> sekali di akhir.'
+    ]
+  };
+
   const deckPlan = [
     {kind:'static', html:titleHTML},
     {kind:'static', html:agendaHTML},
@@ -4255,8 +3953,10 @@ xhr.send();
     html += '<div class="lab-head"><div class="tag">Live Coding Lab '+n+' / '+topics.length+'</div><h2 class="sub">'+lab.title+'</h2></div>';
     html += '<div class="lab-layout">';
     html += '<div class="lab-task"><p>'+lab.desc+'</p><ol>'+lab.steps.map(function(s){ return '<li>'+s+'</li>'; }).join('')+'</ol>';
-    html += '<div class="lab-hint">'+lab.hint+'</div>';
-    html += '<div class="lab-actions"><button class="lab-btn check" data-act="check">✓ Cek Jawaban</button><button class="lab-btn" data-act="solution">Lihat solusi</button></div>';
+    const hints = [lab.hint].concat(HINTS[topic.id] || []);
+    html += '<div class="lab-actions"><button class="lab-btn check" data-act="check">✓ Cek Jawaban</button><button class="lab-btn" data-act="hint">💡 Hint 1/'+hints.length+'</button></div>';
+    html += '<div class="hint-msg" aria-live="polite"></div>';
+    html += '<div class="lab-hints">' + hints.map(function(h, k){ return '<div class="lab-hint" data-hint="'+k+'" hidden><b>Hint '+(k+1)+'</b> · '+h+'</div>'; }).join('') + '</div>';
     html += '<div class="lab-pass-banner">Lab lolos ✓ — mantap!</div><ul class="lab-result"></ul></div>';
     html += '<div class="editor-col"><div class="editor-toolbar">'
       + '<button class="ed-tab on" data-tab="js">app.js</button><button class="ed-tab" data-tab="html">index.html</button><span class="spacer"></span>'
@@ -4447,7 +4147,7 @@ xhr.send();
     const resultEl = section.querySelector('.lab-result');
     const runner = makeRunner(section, topic.lab.url);
     const starter = { html: block('lab-'+id+'-html'), js: block('lab-'+id+'-js') };
-    const lab = { html: starter.html, js: starter.js, tab: 'js', passed: false, runner: runner, started: false };
+    const lab = { html: starter.html, js: starter.js, tab: 'js', passed: false, runner: runner, started: false, hintDibuka: 0, cekSejakHint: false };
     labs[id] = lab;
 
     function paint(){
@@ -4465,6 +4165,8 @@ xhr.send();
       runner.run({ html: lab.html, js: lab.js, api: { mode: netSel.value } });
     }
     function check(){
+      lab.cekSejakHint = true;
+      if(hintMsg) hintMsg.textContent = '';
       lab[lab.tab] = ta.value;
       lab.started = true;
       resultEl.innerHTML = '<li style="color:var(--muted)">Menjalankan auto-check…</li>';
@@ -4535,12 +4237,22 @@ xhr.send();
       load(); run();
       resultEl.innerHTML = '';
     });
-    section.querySelector('[data-act="solution"]').addEventListener('click', function(){
-      if(!confirm('Tampilkan solusi? Isi app.js akan diganti. Sudah mencoba sendiri dulu?')) return;
-      lab.js = block('lab-'+id+'-sol');
-      lab.tab = 'js';
-      section.querySelectorAll('.ed-tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab === 'js'); });
-      load(); run();
+    // Hint bertahap: hint berikutnya terbuka setelah mencoba Cek Jawaban
+    const hintBtn = section.querySelector('[data-act="hint"]');
+    const hintEls = section.querySelectorAll('[data-hint]');
+    const hintMsg = section.querySelector('.hint-msg');
+    hintBtn.addEventListener('click', function(){
+      if(lab.hintDibuka >= hintEls.length) return;
+      if(lab.hintDibuka > 0 && !lab.cekSejakHint){
+        hintMsg.textContent = 'Coba terapkan hint sebelumnya lalu tekan ✓ Cek Jawaban dulu — setelah itu hint berikutnya terbuka.';
+        return;
+      }
+      hintMsg.textContent = '';
+      hintEls[lab.hintDibuka].hidden = false;
+      lab.hintDibuka++;
+      lab.cekSejakHint = false;
+      hintBtn.textContent = lab.hintDibuka < hintEls.length ? '💡 Hint ' + (lab.hintDibuka + 1) + '/' + hintEls.length : 'Semua hint terbuka';
+      hintBtn.disabled = lab.hintDibuka >= hintEls.length;
     });
     load();
   });
